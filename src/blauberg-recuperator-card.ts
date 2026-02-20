@@ -1,0 +1,950 @@
+/* ===================================================================
+ *  Blauberg Recuperator — Neumorphic HA Custom Card
+ *  A premium neumorphic card for Blauberg wall-mounted recuperators
+ * =================================================================== */
+
+import './blauberg-recuperator-card-editor';
+
+// ── HA type stubs ────────────────────────────────────────────────────
+interface HassEntity {
+    state: string;
+    attributes: Record<string, any>;
+    entity_id: string;
+    last_changed?: string;
+}
+
+interface HomeAssistant {
+    states: Record<string, HassEntity>;
+    callService(
+        domain: string,
+        service: string,
+        data?: Record<string, any>,
+    ): Promise<void>;
+}
+
+interface LovelaceCardConfig {
+    type: string;
+    [key: string]: any;
+}
+
+// ── Default entity IDs ──────────────────────────────────────────────
+const DEFAULTS = {
+    fan_entity: 'fan.siku_blauberg_fan_192_168_1_41',
+    sensor_alarm: 'sensor.alarm',
+    sensor_boost_mode: 'sensor.boost_mode',
+    sensor_filter_timer: 'sensor.filter_timer_countdown',
+    sensor_humidity: 'sensor.humidity',
+    sensor_mode: 'sensor.mode',
+    sensor_rpm: 'sensor.rpm',
+    sensor_timer: 'sensor.timer_countdown',
+    button_party: 'button.party_mode_2',
+    button_reset_filter: 'button.reset_filter_alarm_2',
+    button_sleep: 'button.sleep_mode_2',
+    sensor_firmware: 'sensor.firmware_version',
+    sensor_version: 'sensor.version',
+};
+
+// ── CSS Styles ──────────────────────────────────────────────────────
+const CARD_STYLES = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :host {
+    --neumo-bg: #E4E8EE;
+    --neumo-shadow-dark: rgba(163, 177, 198, 0.6);
+    --neumo-shadow-light: rgba(255, 255, 255, 0.8);
+    --neumo-shadow-dark-strong: rgba(140, 155, 175, 0.7);
+    --neumo-accent: #6C63FF;
+    --neumo-accent-glow: rgba(108, 99, 255, 0.3);
+    --neumo-success: #4ECB71;
+    --neumo-warning: #FFB74D;
+    --neumo-danger: #FF6B6B;
+    --neumo-text: #3A3F47;
+    --neumo-text-secondary: #8A92A0;
+    --neumo-radius: 16px;
+    --neumo-radius-sm: 12px;
+    --neumo-font: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --neumo-fan-active: #6C63FF;
+    --neumo-fan-idle: #B0B8C4;
+
+    display: block;
+    font-family: var(--neumo-font);
+  }
+
+  /* ── Card container ───────────────────────────────────────────── */
+  .card {
+    background: var(--neumo-bg);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow:
+      8px 8px 16px var(--neumo-shadow-dark),
+      -8px -8px 16px var(--neumo-shadow-light);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Header ───────────────────────────────────────────────────── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--neumo-bg);
+    box-shadow:
+      4px 4px 8px var(--neumo-shadow-dark),
+      -4px -4px 8px var(--neumo-shadow-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .header-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--neumo-text);
+    letter-spacing: -0.3px;
+  }
+
+  .header-subtitle {
+    font-size: 11px;
+    color: var(--neumo-text-secondary);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--neumo-bg);
+    box-shadow:
+      inset 2px 2px 4px var(--neumo-shadow-dark),
+      inset -2px -2px 4px var(--neumo-shadow-light);
+    transition: all 0.3s ease;
+  }
+
+  .header-status.active {
+    color: var(--neumo-success);
+  }
+
+  .header-status.inactive {
+    color: var(--neumo-text-secondary);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .header-status.active .status-dot {
+    animation: pulse-dot 2s infinite;
+    box-shadow: 0 0 6px currentColor;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ── Fan Hero ─────────────────────────────────────────────────── */
+  .fan-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 8px 0 24px;
+  }
+
+  .fan-container {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: var(--neumo-bg);
+    box-shadow:
+      inset 6px 6px 12px var(--neumo-shadow-dark),
+      inset -6px -6px 12px var(--neumo-shadow-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .fan-container:hover {
+    transform: scale(1.03);
+  }
+
+  .fan-container:active {
+    transform: scale(0.97);
+  }
+
+  .fan-ring {
+    position: absolute;
+    width: 148px;
+    height: 148px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    transition: all 0.5s ease;
+  }
+
+  .fan-ring.active {
+    border-color: var(--neumo-accent);
+    box-shadow:
+      0 0 15px var(--neumo-accent-glow),
+      inset 0 0 15px var(--neumo-accent-glow);
+    animation: ring-pulse 3s infinite;
+  }
+
+  @keyframes ring-pulse {
+    0%, 100% { box-shadow: 0 0 15px var(--neumo-accent-glow), inset 0 0 15px var(--neumo-accent-glow); }
+    50% { box-shadow: 0 0 25px var(--neumo-accent-glow), inset 0 0 25px var(--neumo-accent-glow); }
+  }
+
+  .fan-svg {
+    width: 110px;
+    height: 110px;
+    transition: transform 0.5s ease;
+  }
+
+  .fan-svg.spinning {
+    animation: spin var(--spin-duration, 3s) linear infinite;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .fan-blade {
+    fill: var(--neumo-fan-idle);
+    transition: fill 0.5s ease;
+  }
+
+  .fan-svg.spinning .fan-blade {
+    fill: var(--neumo-fan-active);
+  }
+
+  .fan-center {
+    fill: var(--neumo-bg);
+    stroke: var(--neumo-fan-idle);
+    stroke-width: 1.5;
+    transition: all 0.5s ease;
+  }
+
+  .fan-svg.spinning .fan-center {
+    stroke: var(--neumo-fan-active);
+  }
+
+  .fan-label {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--neumo-text-secondary);
+    letter-spacing: 0.3px;
+  }
+
+  .fan-rpm {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--neumo-text);
+    margin-top: 4px;
+  }
+
+  .fan-rpm span {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--neumo-text-secondary);
+    margin-left: 2px;
+  }
+
+  /* ── Speed Control ────────────────────────────────────────────── */
+  .speed-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 0 0 24px;
+  }
+
+  .speed-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--neumo-bg);
+    box-shadow:
+      4px 4px 8px var(--neumo-shadow-dark),
+      -4px -4px 8px var(--neumo-shadow-light);
+    color: var(--neumo-text);
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    font-family: var(--neumo-font);
+  }
+
+  .speed-btn:active {
+    box-shadow:
+      inset 3px 3px 6px var(--neumo-shadow-dark),
+      inset -3px -3px 6px var(--neumo-shadow-light);
+    transform: scale(0.95);
+  }
+
+  .speed-display {
+    min-width: 80px;
+    text-align: center;
+    padding: 10px 20px;
+    border-radius: 14px;
+    background: var(--neumo-bg);
+    box-shadow:
+      inset 3px 3px 6px var(--neumo-shadow-dark),
+      inset -3px -3px 6px var(--neumo-shadow-light);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--neumo-accent);
+  }
+
+  .speed-display small {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--neumo-text-secondary);
+    margin-left: 2px;
+  }
+
+  /* ── Sensor Grid ──────────────────────────────────────────────── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--neumo-text-secondary);
+    margin-bottom: 12px;
+    padding-left: 4px;
+  }
+
+  .sensor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .sensor-tile {
+    background: var(--neumo-bg);
+    border-radius: var(--neumo-radius-sm);
+    padding: 14px;
+    box-shadow:
+      4px 4px 8px var(--neumo-shadow-dark),
+      -4px -4px 8px var(--neumo-shadow-light);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sensor-tile:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      6px 6px 12px var(--neumo-shadow-dark),
+      -6px -6px 12px var(--neumo-shadow-light);
+  }
+
+  .sensor-tile.alarm-active {
+    box-shadow:
+      4px 4px 8px var(--neumo-shadow-dark),
+      -4px -4px 8px var(--neumo-shadow-light),
+      inset 0 0 0 2px var(--neumo-danger);
+    animation: alarm-glow 2s infinite;
+  }
+
+  @keyframes alarm-glow {
+    0%, 100% { box-shadow: 4px 4px 8px var(--neumo-shadow-dark), -4px -4px 8px var(--neumo-shadow-light), inset 0 0 0 2px var(--neumo-danger); }
+    50% { box-shadow: 4px 4px 8px var(--neumo-shadow-dark), -4px -4px 8px var(--neumo-shadow-light), inset 0 0 0 2px var(--neumo-danger), 0 0 12px rgba(255,107,107,0.3); }
+  }
+
+  .sensor-icon {
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .sensor-name {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--neumo-text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .sensor-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--neumo-text);
+    line-height: 1.2;
+  }
+
+  .sensor-value.small {
+    font-size: 14px;
+  }
+
+  .sensor-unit {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--neumo-text-secondary);
+    margin-left: 2px;
+  }
+
+  .sensor-tile.wide {
+    grid-column: 1 / -1;
+  }
+
+  /* ── Filter progress bar ──────────────────────────────────────── */
+  .filter-progress {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--neumo-bg);
+    box-shadow:
+      inset 1px 1px 2px var(--neumo-shadow-dark),
+      inset -1px -1px 2px var(--neumo-shadow-light);
+    margin-top: 8px;
+    overflow: hidden;
+  }
+
+  .filter-progress-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--neumo-success), var(--neumo-accent));
+    transition: width 1s ease;
+  }
+
+  /* ── Action Buttons ───────────────────────────────────────────── */
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .action-btn {
+    flex: 1;
+    padding: 12px 8px;
+    border-radius: var(--neumo-radius-sm);
+    border: none;
+    background: var(--neumo-bg);
+    box-shadow:
+      4px 4px 8px var(--neumo-shadow-dark),
+      -4px -4px 8px var(--neumo-shadow-light);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    font-family: var(--neumo-font);
+  }
+
+  .action-btn:active {
+    box-shadow:
+      inset 3px 3px 6px var(--neumo-shadow-dark),
+      inset -3px -3px 6px var(--neumo-shadow-light);
+    transform: scale(0.96);
+  }
+
+  .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      6px 6px 12px var(--neumo-shadow-dark),
+      -6px -6px 12px var(--neumo-shadow-light);
+  }
+
+  .action-icon {
+    font-size: 22px;
+  }
+
+  .action-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: var(--neumo-text-secondary);
+    text-align: center;
+  }
+
+  /* ── Info Footer ──────────────────────────────────────────────── */
+  .info-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-radius: var(--neumo-radius-sm);
+    background: var(--neumo-bg);
+    box-shadow:
+      inset 2px 2px 4px var(--neumo-shadow-dark),
+      inset -2px -2px 4px var(--neumo-shadow-light);
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .info-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--neumo-text-secondary);
+  }
+
+  .info-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--neumo-text);
+  }
+
+  .info-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--neumo-shadow-dark);
+    opacity: 0.3;
+  }
+
+  /* ── Mode badge ───────────────────────────────────────────────── */
+  .mode-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--neumo-bg);
+    box-shadow:
+      inset 2px 2px 4px var(--neumo-shadow-dark),
+      inset -2px -2px 4px var(--neumo-shadow-light);
+    color: var(--neumo-accent);
+  }
+
+  /* ── Unavailable overlay ──────────────────────────────────────── */
+  .unavailable {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+  }
+
+  .unavailable-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  .unavailable-text {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--neumo-text-secondary);
+  }
+
+  .unavailable-hint {
+    font-size: 12px;
+    color: var(--neumo-text-secondary);
+    opacity: 0.6;
+    margin-top: 4px;
+  }
+
+  /* ── Boost active indicator ───────────────────────────────────── */
+  .boost-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .boost-indicator.active {
+    background: linear-gradient(135deg, #FFB74D22, #FF945022);
+    color: #FF9800;
+  }
+
+  .boost-indicator.inactive {
+    background: var(--neumo-bg);
+    box-shadow:
+      inset 1px 1px 3px var(--neumo-shadow-dark),
+      inset -1px -1px 3px var(--neumo-shadow-light);
+    color: var(--neumo-text-secondary);
+  }
+
+  /* ── Dark mode ────────────────────────────────────────────────── */
+  :host {
+    color-scheme: light dark;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :host {
+      --neumo-bg: #2D3239;
+      --neumo-shadow-dark: rgba(20, 23, 28, 0.7);
+      --neumo-shadow-light: rgba(60, 66, 75, 0.5);
+      --neumo-shadow-dark-strong: rgba(15, 18, 22, 0.8);
+      --neumo-text: #E0E4E8;
+      --neumo-text-secondary: #8A92A0;
+      --neumo-fan-idle: #6B7280;
+      --neumo-fan-active: #818CF8;
+      --neumo-accent: #818CF8;
+      --neumo-accent-glow: rgba(129, 140, 248, 0.3);
+    }
+  }
+`;
+
+// ── SVG Fan Blade ───────────────────────────────────────────────────
+const FAN_SVG = `
+<svg viewBox="0 0 100 100" class="fan-svg" xmlns="http://www.w3.org/2000/svg">
+  <!-- Blade 1 -->
+  <path class="fan-blade" d="M50 50 C50 38, 42 18, 50 8 C58 18, 50 38, 50 50Z" />
+  <!-- Blade 2 -->
+  <path class="fan-blade" d="M50 50 C60.4 44, 78.4 42.4, 86.4 29.6 C78.4 34.4, 60.4 33.6, 50 50Z" transform="rotate(60, 50, 50)" />
+  <!-- Blade 3 -->
+  <path class="fan-blade" d="M50 50 C60.4 44, 78.4 42.4, 86.4 29.6 C78.4 34.4, 60.4 33.6, 50 50Z" transform="rotate(120, 50, 50)" />
+  <!-- Blade 4 -->
+  <path class="fan-blade" d="M50 50 C50 38, 42 18, 50 8 C58 18, 50 38, 50 50Z" transform="rotate(180, 50, 50)" />
+  <!-- Blade 5 -->
+  <path class="fan-blade" d="M50 50 C60.4 44, 78.4 42.4, 86.4 29.6 C78.4 34.4, 60.4 33.6, 50 50Z" transform="rotate(240, 50, 50)" />
+  <!-- Blade 6 -->
+  <path class="fan-blade" d="M50 50 C60.4 44, 78.4 42.4, 86.4 29.6 C78.4 34.4, 60.4 33.6, 50 50Z" transform="rotate(300, 50, 50)" />
+  <!-- Center hub -->
+  <circle class="fan-center" cx="50" cy="50" r="8" />
+</svg>
+`;
+
+// ── Card class ──────────────────────────────────────────────────────
+class BlaubergRecuperatorCard extends HTMLElement {
+    private _hass!: HomeAssistant;
+    private _config!: LovelaceCardConfig;
+    private _root!: ShadowRoot;
+    private _rendered = false;
+
+    /* HA calls this first */
+    setConfig(config: LovelaceCardConfig): void {
+        this._config = {
+            title: 'Blauberg Recuperator',
+            ...config,
+        };
+
+        if (!this._root) {
+            this._root = this.attachShadow({ mode: 'open' });
+        }
+    }
+
+    /* HA calls this when state changes */
+    set hass(hass: HomeAssistant) {
+        this._hass = hass;
+        this._render();
+    }
+
+    /* Helpers */
+    private _e(id: string): string {
+        return (this._config as any)[id] ?? (DEFAULTS as any)[id] ?? '';
+    }
+
+    private _state(configKey: string): HassEntity | undefined {
+        const entityId = this._e(configKey);
+        return entityId ? this._hass.states[entityId] : undefined;
+    }
+
+    private _stateVal(configKey: string, fallback: string = '—'): string {
+        const entity = this._state(configKey);
+        if (!entity) return fallback;
+        return entity.state === 'unavailable' || entity.state === 'unknown'
+            ? fallback
+            : entity.state;
+    }
+
+    private _isFanOn(): boolean {
+        const fan = this._state('fan_entity');
+        return fan?.state === 'on';
+    }
+
+    private _fanSpeedPct(): number {
+        const fan = this._state('fan_entity');
+        if (!fan || fan.state !== 'on') return 0;
+        return fan.attributes.percentage ?? 0;
+    }
+
+    private _getSpinDuration(): string {
+        const rpm = parseInt(this._stateVal('sensor_rpm', '0'), 10);
+        if (!rpm || rpm <= 0) return '4s';
+        // Map RPM to animation speed: higher RPM = faster spin
+        const duration = Math.max(0.3, 60 / rpm);
+        return `${Math.min(duration, 4).toFixed(2)}s`;
+    }
+
+    /* ── Toggle fan ────────────────────────────────────────────────── */
+    private async _toggleFan(): Promise<void> {
+        const entityId = this._e('fan_entity');
+        if (!entityId) return;
+        await this._hass.callService('fan', 'toggle', {
+            entity_id: entityId,
+        });
+    }
+
+    /* ── Set speed ─────────────────────────────────────────────────── */
+    private async _setSpeed(delta: number): Promise<void> {
+        const entityId = this._e('fan_entity');
+        const fan = this._state('fan_entity');
+        if (!entityId || !fan) return;
+
+        const current = fan.attributes.percentage ?? 0;
+        const step = fan.attributes.percentage_step ?? 25;
+        const newSpeed = Math.max(0, Math.min(100, current + delta * step));
+
+        if (newSpeed === 0) {
+            await this._hass.callService('fan', 'turn_off', { entity_id: entityId });
+        } else {
+            await this._hass.callService('fan', 'set_percentage', {
+                entity_id: entityId,
+                percentage: newSpeed,
+            });
+        }
+    }
+
+    /* ── Press button ──────────────────────────────────────────────── */
+    private async _pressButton(configKey: string): Promise<void> {
+        const entityId = this._e(configKey);
+        if (!entityId) return;
+        await this._hass.callService('button', 'press', {
+            entity_id: entityId,
+        });
+    }
+
+    /* ── Render ────────────────────────────────────────────────────── */
+    private _render(): void {
+        if (!this._hass || !this._config) return;
+
+        const fanEntity = this._state('fan_entity');
+        const isFanOn = this._isFanOn();
+        const speedPct = this._fanSpeedPct();
+        const spinDuration = this._getSpinDuration();
+
+        const alarm = this._stateVal('sensor_alarm');
+        const boostMode = this._stateVal('sensor_boost_mode');
+        const filterTimer = this._stateVal('sensor_filter_timer');
+        const humidity = this._stateVal('sensor_humidity');
+        const mode = this._stateVal('sensor_mode');
+        const rpm = this._stateVal('sensor_rpm');
+        const timer = this._stateVal('sensor_timer');
+        const firmware = this._stateVal('sensor_firmware');
+        const version = this._stateVal('sensor_version');
+
+        const isAlarmActive =
+            alarm !== '—' &&
+            alarm !== '0' &&
+            alarm.toLowerCase() !== 'off' &&
+            alarm.toLowerCase() !== 'none' &&
+            alarm.toLowerCase() !== 'no alarm';
+
+        const isBoostActive =
+            boostMode !== '—' &&
+            boostMode !== '0' &&
+            boostMode.toLowerCase() !== 'off' &&
+            boostMode.toLowerCase() !== 'inactive';
+
+        this._root.innerHTML = `
+      <style>${CARD_STYLES}</style>
+      <ha-card>
+        <div class="card">
+          <!-- Header -->
+          <div class="header">
+            <div class="header-left">
+              <div class="header-icon">🌀</div>
+              <div>
+                <div class="header-title">${this._config.title || 'Blauberg Recuperator'}</div>
+                <div class="header-subtitle">${this._config.subtitle || '192.168.1.41'}</div>
+              </div>
+            </div>
+            <div class="header-status ${isFanOn ? 'active' : 'inactive'}">
+              <div class="status-dot"></div>
+              ${isFanOn ? 'Работает' : 'Выкл'}
+            </div>
+          </div>
+
+          <!-- Fan Hero -->
+          <div class="fan-section">
+            <div class="fan-container" id="fan-toggle">
+              <div class="fan-ring ${isFanOn ? 'active' : ''}"></div>
+              <div style="--spin-duration: ${spinDuration}">
+                ${FAN_SVG.replace(
+            'class="fan-svg"',
+            `class="fan-svg ${isFanOn ? 'spinning' : ''}" style="--spin-duration: ${spinDuration}"`,
+        )}
+              </div>
+            </div>
+            <div class="fan-label">ОБОРОТЫ</div>
+            <div class="fan-rpm">${rpm}<span> RPM</span></div>
+          </div>
+
+          <!-- Speed Control -->
+          <div class="speed-control">
+            <button class="speed-btn" id="speed-down">−</button>
+            <div class="speed-display">${speedPct}<small>%</small></div>
+            <button class="speed-btn" id="speed-up">+</button>
+          </div>
+
+          <!-- Sensors -->
+          <div class="section-label">Датчики</div>
+          <div class="sensor-grid">
+            <!-- Humidity -->
+            <div class="sensor-tile">
+              <div class="sensor-icon">💧</div>
+              <div class="sensor-name">Влажность</div>
+              <div class="sensor-value">${humidity}<span class="sensor-unit">%</span></div>
+            </div>
+
+            <!-- Mode -->
+            <div class="sensor-tile">
+              <div class="sensor-icon">⚙️</div>
+              <div class="sensor-name">Режим</div>
+              <div class="sensor-value">
+                <span class="mode-badge">${mode}</span>
+              </div>
+            </div>
+
+            <!-- Boost -->
+            <div class="sensor-tile">
+              <div class="sensor-icon">⚡</div>
+              <div class="sensor-name">Буст</div>
+              <div class="sensor-value">
+                <span class="boost-indicator ${isBoostActive ? 'active' : 'inactive'}">
+                  ${isBoostActive ? '🔥 Вкл' : 'Выкл'}
+                </span>
+              </div>
+            </div>
+
+            <!-- Alarm -->
+            <div class="sensor-tile ${isAlarmActive ? 'alarm-active' : ''}">
+              <div class="sensor-icon">${isAlarmActive ? '🚨' : '✅'}</div>
+              <div class="sensor-name">Тревога</div>
+              <div class="sensor-value small">${alarm}</div>
+            </div>
+
+            <!-- Filter Timer -->
+            <div class="sensor-tile wide">
+              <div class="sensor-icon">🔄</div>
+              <div class="sensor-name">Фильтр</div>
+              <div class="sensor-value small">${filterTimer}</div>
+              <div class="filter-progress">
+                <div class="filter-progress-bar" style="width: ${this._getFilterProgress(filterTimer)}%"></div>
+              </div>
+            </div>
+
+            <!-- Timer -->
+            <div class="sensor-tile">
+              <div class="sensor-icon">⏱️</div>
+              <div class="sensor-name">Таймер</div>
+              <div class="sensor-value small">${timer}</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="section-label">Управление</div>
+          <div class="actions">
+            <button class="action-btn" id="btn-party">
+              <span class="action-icon">🎉</span>
+              <span class="action-label">Вечеринка</span>
+            </button>
+            <button class="action-btn" id="btn-sleep">
+              <span class="action-icon">🌙</span>
+              <span class="action-label">Сон</span>
+            </button>
+            <button class="action-btn" id="btn-reset-filter">
+              <span class="action-icon">🔄</span>
+              <span class="action-label">Сброс фильтра</span>
+            </button>
+          </div>
+
+          <!-- Info Footer -->
+          <div class="info-footer">
+            <div class="info-item">
+              <span class="info-label">Прошивка</span>
+              <span class="info-value">${firmware}</span>
+            </div>
+            <div class="info-divider"></div>
+            <div class="info-item">
+              <span class="info-label">Версия</span>
+              <span class="info-value">${version}</span>
+            </div>
+          </div>
+        </div>
+      </ha-card>
+    `;
+
+        // ── Bind events ───────────────────────────────────────────────
+        this._root.getElementById('fan-toggle')?.addEventListener('click', () => this._toggleFan());
+        this._root.getElementById('speed-down')?.addEventListener('click', () => this._setSpeed(-1));
+        this._root.getElementById('speed-up')?.addEventListener('click', () => this._setSpeed(1));
+        this._root.getElementById('btn-party')?.addEventListener('click', () => this._pressButton('button_party'));
+        this._root.getElementById('btn-sleep')?.addEventListener('click', () => this._pressButton('button_sleep'));
+        this._root.getElementById('btn-reset-filter')?.addEventListener('click', () => this._pressButton('button_reset_filter'));
+    }
+
+    /* ── Filter progress helper ────────────────────────────────────── */
+    private _getFilterProgress(value: string): number {
+        if (value === '—') return 100;
+        const num = parseInt(value, 10);
+        if (isNaN(num)) return 50;
+        // Assume max filter life of ~720 hours (30 days)
+        const maxHours = 720;
+        return Math.max(0, Math.min(100, (num / maxHours) * 100));
+    }
+
+    /* ── Card sizing ───────────────────────────────────────────────── */
+    getCardSize(): number {
+        return 8;
+    }
+
+    /* ── Editor ────────────────────────────────────────────────────── */
+    static getConfigElement(): HTMLElement {
+        return document.createElement('blauberg-recuperator-card-editor');
+    }
+
+    static getStubConfig(): Record<string, string> {
+        return { ...DEFAULTS };
+    }
+}
+
+// ── Register ────────────────────────────────────────────────────────
+customElements.define('blauberg-recuperator-card', BlaubergRecuperatorCard);
+
+(window as any).customCards = (window as any).customCards || [];
+(window as any).customCards.push({
+    type: 'blauberg-recuperator-card',
+    name: 'Blauberg Recuperator',
+    description: 'Neumorphic card for Blauberg wall-mounted recuperators',
+    preview: true,
+});

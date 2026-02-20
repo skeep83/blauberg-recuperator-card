@@ -1,0 +1,15 @@
+{
+  "name": "blauberg-recuperator-card",
+  "version": "1.0.0",
+  "description": "Neumorphic Home Assistant card for Blauberg wall-mounted recuperators",
+  "main": "dist/blauberg-recuperator-card.js",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vite": "^5.1.0"
+  },
+  "license": "MIT"
+}
