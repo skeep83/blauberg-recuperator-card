@@ -7,41 +7,41 @@ import './blauberg-recuperator-card-editor';
 
 // ── HA type stubs ────────────────────────────────────────────────────
 interface HassEntity {
-    state: string;
-    attributes: Record<string, any>;
-    entity_id: string;
-    last_changed?: string;
+  state: string;
+  attributes: Record<string, any>;
+  entity_id: string;
+  last_changed?: string;
 }
 
 interface HomeAssistant {
-    states: Record<string, HassEntity>;
-    callService(
-        domain: string,
-        service: string,
-        data?: Record<string, any>,
-    ): Promise<void>;
+  states: Record<string, HassEntity>;
+  callService(
+    domain: string,
+    service: string,
+    data?: Record<string, any>,
+  ): Promise<void>;
 }
 
 interface LovelaceCardConfig {
-    type: string;
-    [key: string]: any;
+  type: string;
+  [key: string]: any;
 }
 
 // ── Default entity IDs ──────────────────────────────────────────────
 const DEFAULTS = {
-    fan_entity: 'fan.siku_blauberg_fan_192_168_1_41',
-    sensor_alarm: 'sensor.alarm',
-    sensor_boost_mode: 'sensor.boost_mode',
-    sensor_filter_timer: 'sensor.filter_timer_countdown',
-    sensor_humidity: 'sensor.humidity',
-    sensor_mode: 'sensor.mode',
-    sensor_rpm: 'sensor.rpm',
-    sensor_timer: 'sensor.timer_countdown',
-    button_party: 'button.party_mode_2',
-    button_reset_filter: 'button.reset_filter_alarm_2',
-    button_sleep: 'button.sleep_mode_2',
-    sensor_firmware: 'sensor.firmware_version',
-    sensor_version: 'sensor.version',
+  fan_entity: 'fan.siku_blauberg_fan_192_168_1_41',
+  sensor_alarm: 'sensor.alarm',
+  sensor_boost_mode: 'sensor.boost_mode',
+  sensor_filter_timer: 'sensor.filter_timer_countdown',
+  sensor_humidity: 'sensor.humidity',
+  sensor_mode: 'sensor.mode',
+  sensor_rpm: 'sensor.rpm',
+  sensor_timer: 'sensor.timer_countdown',
+  button_party: 'button.party_mode_2',
+  button_reset_filter: 'button.reset_filter_alarm_2',
+  button_sleep: 'button.sleep_mode_2',
+  sensor_firmware: 'sensor.firmware_version',
+  sensor_version: 'sensor.version',
 };
 
 // ── CSS Styles ──────────────────────────────────────────────────────
@@ -223,10 +223,13 @@ const CARD_STYLES = `
   .fan-svg {
     width: 110px;
     height: 110px;
-    transition: transform 0.5s ease;
   }
 
-  .fan-svg.spinning {
+  .fan-rotor {
+    transform-origin: 50% 50%;
+  }
+
+  .fan-svg.spinning .fan-rotor {
     animation: spin var(--spin-duration, 3s) linear infinite;
   }
 
@@ -247,7 +250,7 @@ const CARD_STYLES = `
   .fan-center {
     fill: var(--neumo-bg);
     stroke: var(--neumo-fan-idle);
-    stroke-width: 1.5;
+    stroke-width: 2;
     transition: all 0.5s ease;
   }
 
@@ -626,156 +629,155 @@ const CARD_STYLES = `
 // ── SVG Fan Blade ───────────────────────────────────────────────────
 const FAN_SVG = `
 <svg viewBox="0 0 100 100" class="fan-svg" xmlns="http://www.w3.org/2000/svg">
-  <!-- Blade 1 -->
-  <path class="fan-blade" d="M50 50 C50 38, 42 18, 50 8 C58 18, 50 38, 50 50Z" />
-  <!-- Blade 2 -->
-  <path class="fan-blade" d="M50 50 C60.4 44, 78.4 42.4, 86.4 29.6 C78.4 34.4, 60.4 33.6, 50 50Z" transform="rotate(60, 50, 50)" />
-  <!-- Blade 3 -->
-  <path class="fan-blade" d="M50 50 C60.4 44, 78.4 42.4, 86.4 29.6 C78.4 34.4, 60.4 33.6, 50 50Z" transform="rotate(120, 50, 50)" />
-  <!-- Blade 4 -->
-  <path class="fan-blade" d="M50 50 C50 38, 42 18, 50 8 C58 18, 50 38, 50 50Z" transform="rotate(180, 50, 50)" />
-  <!-- Blade 5 -->
-  <path class="fan-blade" d="M50 50 C60.4 44, 78.4 42.4, 86.4 29.6 C78.4 34.4, 60.4 33.6, 50 50Z" transform="rotate(240, 50, 50)" />
-  <!-- Blade 6 -->
-  <path class="fan-blade" d="M50 50 C60.4 44, 78.4 42.4, 86.4 29.6 C78.4 34.4, 60.4 33.6, 50 50Z" transform="rotate(300, 50, 50)" />
-  <!-- Center hub -->
-  <circle class="fan-center" cx="50" cy="50" r="8" />
+  <g class="fan-rotor">
+    <!-- Blades -->
+    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(0, 50, 50)" />
+    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(51.43, 50, 50)" />
+    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(102.86, 50, 50)" />
+    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(154.29, 50, 50)" />
+    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(205.71, 50, 50)" />
+    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(257.14, 50, 50)" />
+    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(308.57, 50, 50)" />
+    <!-- Center hub -->
+    <circle class="fan-center" cx="50" cy="50" r="12" />
+    <circle cx="50" cy="50" r="4" fill="var(--neumo-bg)" />
+  </g>
 </svg>
 `;
 
 // ── Card class ──────────────────────────────────────────────────────
 class BlaubergRecuperatorCard extends HTMLElement {
-    private _hass!: HomeAssistant;
-    private _config!: LovelaceCardConfig;
-    private _root!: ShadowRoot;
-    private _rendered = false;
+  private _hass!: HomeAssistant;
+  private _config!: LovelaceCardConfig;
+  private _root!: ShadowRoot;
+  private _rendered = false;
 
-    /* HA calls this first */
-    setConfig(config: LovelaceCardConfig): void {
-        this._config = {
-            title: 'Blauberg Recuperator',
-            ...config,
-        };
+  /* HA calls this first */
+  setConfig(config: LovelaceCardConfig): void {
+    this._config = {
+      title: 'Blauberg Recuperator',
+      ...config,
+    };
 
-        if (!this._root) {
-            this._root = this.attachShadow({ mode: 'open' });
-        }
+    if (!this._root) {
+      this._root = this.attachShadow({ mode: 'open' });
     }
+  }
 
-    /* HA calls this when state changes */
-    set hass(hass: HomeAssistant) {
-        this._hass = hass;
-        this._render();
+  /* HA calls this when state changes */
+  set hass(hass: HomeAssistant) {
+    this._hass = hass;
+    this._render();
+  }
+
+  /* Helpers */
+  private _e(id: string): string {
+    return (this._config as any)[id] ?? (DEFAULTS as any)[id] ?? '';
+  }
+
+  private _state(configKey: string): HassEntity | undefined {
+    const entityId = this._e(configKey);
+    return entityId ? this._hass.states[entityId] : undefined;
+  }
+
+  private _stateVal(configKey: string, fallback: string = '—'): string {
+    const entity = this._state(configKey);
+    if (!entity) return fallback;
+    return entity.state === 'unavailable' || entity.state === 'unknown'
+      ? fallback
+      : entity.state;
+  }
+
+  private _isFanOn(): boolean {
+    const fan = this._state('fan_entity');
+    return fan?.state === 'on';
+  }
+
+  private _fanSpeedPct(): number {
+    const fan = this._state('fan_entity');
+    if (!fan || fan.state !== 'on') return 0;
+    return fan.attributes.percentage ?? 0;
+  }
+
+  private _getSpinDuration(): string {
+    const rpm = parseInt(this._stateVal('sensor_rpm', '0'), 10);
+    if (!rpm || rpm <= 0) return '4s';
+    // Map RPM to animation speed: higher RPM = faster spin
+    const duration = Math.max(0.3, 60 / rpm);
+    return `${Math.min(duration, 4).toFixed(2)}s`;
+  }
+
+  /* ── Toggle fan ────────────────────────────────────────────────── */
+  private async _toggleFan(): Promise<void> {
+    const entityId = this._e('fan_entity');
+    if (!entityId) return;
+    await this._hass.callService('fan', 'toggle', {
+      entity_id: entityId,
+    });
+  }
+
+  /* ── Set speed ─────────────────────────────────────────────────── */
+  private async _setSpeed(delta: number): Promise<void> {
+    const entityId = this._e('fan_entity');
+    const fan = this._state('fan_entity');
+    if (!entityId || !fan) return;
+
+    const current = fan.attributes.percentage ?? 0;
+    const step = fan.attributes.percentage_step ?? 25;
+    const newSpeed = Math.max(0, Math.min(100, current + delta * step));
+
+    if (newSpeed === 0) {
+      await this._hass.callService('fan', 'turn_off', { entity_id: entityId });
+    } else {
+      await this._hass.callService('fan', 'set_percentage', {
+        entity_id: entityId,
+        percentage: newSpeed,
+      });
     }
+  }
 
-    /* Helpers */
-    private _e(id: string): string {
-        return (this._config as any)[id] ?? (DEFAULTS as any)[id] ?? '';
-    }
+  /* ── Press button ──────────────────────────────────────────────── */
+  private async _pressButton(configKey: string): Promise<void> {
+    const entityId = this._e(configKey);
+    if (!entityId) return;
+    await this._hass.callService('button', 'press', {
+      entity_id: entityId,
+    });
+  }
 
-    private _state(configKey: string): HassEntity | undefined {
-        const entityId = this._e(configKey);
-        return entityId ? this._hass.states[entityId] : undefined;
-    }
+  /* ── Render ────────────────────────────────────────────────────── */
+  private _render(): void {
+    if (!this._hass || !this._config) return;
 
-    private _stateVal(configKey: string, fallback: string = '—'): string {
-        const entity = this._state(configKey);
-        if (!entity) return fallback;
-        return entity.state === 'unavailable' || entity.state === 'unknown'
-            ? fallback
-            : entity.state;
-    }
+    const fanEntity = this._state('fan_entity');
+    const isFanOn = this._isFanOn();
+    const speedPct = this._fanSpeedPct();
+    const spinDuration = this._getSpinDuration();
 
-    private _isFanOn(): boolean {
-        const fan = this._state('fan_entity');
-        return fan?.state === 'on';
-    }
+    const alarm = this._stateVal('sensor_alarm');
+    const boostMode = this._stateVal('sensor_boost_mode');
+    const filterTimer = this._stateVal('sensor_filter_timer');
+    const humidity = this._stateVal('sensor_humidity');
+    const mode = this._stateVal('sensor_mode');
+    const rpm = this._stateVal('sensor_rpm');
+    const timer = this._stateVal('sensor_timer');
+    const firmware = this._stateVal('sensor_firmware');
+    const version = this._stateVal('sensor_version');
 
-    private _fanSpeedPct(): number {
-        const fan = this._state('fan_entity');
-        if (!fan || fan.state !== 'on') return 0;
-        return fan.attributes.percentage ?? 0;
-    }
+    const isAlarmActive =
+      alarm !== '—' &&
+      alarm !== '0' &&
+      alarm.toLowerCase() !== 'off' &&
+      alarm.toLowerCase() !== 'none' &&
+      alarm.toLowerCase() !== 'no alarm';
 
-    private _getSpinDuration(): string {
-        const rpm = parseInt(this._stateVal('sensor_rpm', '0'), 10);
-        if (!rpm || rpm <= 0) return '4s';
-        // Map RPM to animation speed: higher RPM = faster spin
-        const duration = Math.max(0.3, 60 / rpm);
-        return `${Math.min(duration, 4).toFixed(2)}s`;
-    }
+    const isBoostActive =
+      boostMode !== '—' &&
+      boostMode !== '0' &&
+      boostMode.toLowerCase() !== 'off' &&
+      boostMode.toLowerCase() !== 'inactive';
 
-    /* ── Toggle fan ────────────────────────────────────────────────── */
-    private async _toggleFan(): Promise<void> {
-        const entityId = this._e('fan_entity');
-        if (!entityId) return;
-        await this._hass.callService('fan', 'toggle', {
-            entity_id: entityId,
-        });
-    }
-
-    /* ── Set speed ─────────────────────────────────────────────────── */
-    private async _setSpeed(delta: number): Promise<void> {
-        const entityId = this._e('fan_entity');
-        const fan = this._state('fan_entity');
-        if (!entityId || !fan) return;
-
-        const current = fan.attributes.percentage ?? 0;
-        const step = fan.attributes.percentage_step ?? 25;
-        const newSpeed = Math.max(0, Math.min(100, current + delta * step));
-
-        if (newSpeed === 0) {
-            await this._hass.callService('fan', 'turn_off', { entity_id: entityId });
-        } else {
-            await this._hass.callService('fan', 'set_percentage', {
-                entity_id: entityId,
-                percentage: newSpeed,
-            });
-        }
-    }
-
-    /* ── Press button ──────────────────────────────────────────────── */
-    private async _pressButton(configKey: string): Promise<void> {
-        const entityId = this._e(configKey);
-        if (!entityId) return;
-        await this._hass.callService('button', 'press', {
-            entity_id: entityId,
-        });
-    }
-
-    /* ── Render ────────────────────────────────────────────────────── */
-    private _render(): void {
-        if (!this._hass || !this._config) return;
-
-        const fanEntity = this._state('fan_entity');
-        const isFanOn = this._isFanOn();
-        const speedPct = this._fanSpeedPct();
-        const spinDuration = this._getSpinDuration();
-
-        const alarm = this._stateVal('sensor_alarm');
-        const boostMode = this._stateVal('sensor_boost_mode');
-        const filterTimer = this._stateVal('sensor_filter_timer');
-        const humidity = this._stateVal('sensor_humidity');
-        const mode = this._stateVal('sensor_mode');
-        const rpm = this._stateVal('sensor_rpm');
-        const timer = this._stateVal('sensor_timer');
-        const firmware = this._stateVal('sensor_firmware');
-        const version = this._stateVal('sensor_version');
-
-        const isAlarmActive =
-            alarm !== '—' &&
-            alarm !== '0' &&
-            alarm.toLowerCase() !== 'off' &&
-            alarm.toLowerCase() !== 'none' &&
-            alarm.toLowerCase() !== 'no alarm';
-
-        const isBoostActive =
-            boostMode !== '—' &&
-            boostMode !== '0' &&
-            boostMode.toLowerCase() !== 'off' &&
-            boostMode.toLowerCase() !== 'inactive';
-
-        this._root.innerHTML = `
+    this._root.innerHTML = `
       <style>${CARD_STYLES}</style>
       <ha-card>
         <div class="card">
@@ -800,9 +802,9 @@ class BlaubergRecuperatorCard extends HTMLElement {
               <div class="fan-ring ${isFanOn ? 'active' : ''}"></div>
               <div style="--spin-duration: ${spinDuration}">
                 ${FAN_SVG.replace(
-            'class="fan-svg"',
-            `class="fan-svg ${isFanOn ? 'spinning' : ''}" style="--spin-duration: ${spinDuration}"`,
-        )}
+      'class="fan-svg"',
+      `class="fan-svg ${isFanOn ? 'spinning' : ''}" style="--spin-duration: ${spinDuration}"`,
+    )}
               </div>
             </div>
             <div class="fan-label">ОБОРОТЫ</div>
@@ -904,38 +906,38 @@ class BlaubergRecuperatorCard extends HTMLElement {
       </ha-card>
     `;
 
-        // ── Bind events ───────────────────────────────────────────────
-        this._root.getElementById('fan-toggle')?.addEventListener('click', () => this._toggleFan());
-        this._root.getElementById('speed-down')?.addEventListener('click', () => this._setSpeed(-1));
-        this._root.getElementById('speed-up')?.addEventListener('click', () => this._setSpeed(1));
-        this._root.getElementById('btn-party')?.addEventListener('click', () => this._pressButton('button_party'));
-        this._root.getElementById('btn-sleep')?.addEventListener('click', () => this._pressButton('button_sleep'));
-        this._root.getElementById('btn-reset-filter')?.addEventListener('click', () => this._pressButton('button_reset_filter'));
-    }
+    // ── Bind events ───────────────────────────────────────────────
+    this._root.getElementById('fan-toggle')?.addEventListener('click', () => this._toggleFan());
+    this._root.getElementById('speed-down')?.addEventListener('click', () => this._setSpeed(-1));
+    this._root.getElementById('speed-up')?.addEventListener('click', () => this._setSpeed(1));
+    this._root.getElementById('btn-party')?.addEventListener('click', () => this._pressButton('button_party'));
+    this._root.getElementById('btn-sleep')?.addEventListener('click', () => this._pressButton('button_sleep'));
+    this._root.getElementById('btn-reset-filter')?.addEventListener('click', () => this._pressButton('button_reset_filter'));
+  }
 
-    /* ── Filter progress helper ────────────────────────────────────── */
-    private _getFilterProgress(value: string): number {
-        if (value === '—') return 100;
-        const num = parseInt(value, 10);
-        if (isNaN(num)) return 50;
-        // Assume max filter life of ~720 hours (30 days)
-        const maxHours = 720;
-        return Math.max(0, Math.min(100, (num / maxHours) * 100));
-    }
+  /* ── Filter progress helper ────────────────────────────────────── */
+  private _getFilterProgress(value: string): number {
+    if (value === '—') return 100;
+    const num = parseInt(value, 10);
+    if (isNaN(num)) return 50;
+    // Assume max filter life of ~720 hours (30 days)
+    const maxHours = 720;
+    return Math.max(0, Math.min(100, (num / maxHours) * 100));
+  }
 
-    /* ── Card sizing ───────────────────────────────────────────────── */
-    getCardSize(): number {
-        return 8;
-    }
+  /* ── Card sizing ───────────────────────────────────────────────── */
+  getCardSize(): number {
+    return 8;
+  }
 
-    /* ── Editor ────────────────────────────────────────────────────── */
-    static getConfigElement(): HTMLElement {
-        return document.createElement('blauberg-recuperator-card-editor');
-    }
+  /* ── Editor ────────────────────────────────────────────────────── */
+  static getConfigElement(): HTMLElement {
+    return document.createElement('blauberg-recuperator-card-editor');
+  }
 
-    static getStubConfig(): Record<string, string> {
-        return { ...DEFAULTS };
-    }
+  static getStubConfig(): Record<string, string> {
+    return { ...DEFAULTS };
+  }
 }
 
 // ── Register ────────────────────────────────────────────────────────
@@ -943,8 +945,8 @@ customElements.define('blauberg-recuperator-card', BlaubergRecuperatorCard);
 
 (window as any).customCards = (window as any).customCards || [];
 (window as any).customCards.push({
-    type: 'blauberg-recuperator-card',
-    name: 'Blauberg Recuperator',
-    description: 'Neumorphic card for Blauberg wall-mounted recuperators',
-    preview: true,
+  type: 'blauberg-recuperator-card',
+  name: 'Blauberg Recuperator',
+  description: 'Neumorphic card for Blauberg wall-mounted recuperators',
+  preview: true,
 });
