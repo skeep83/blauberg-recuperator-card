@@ -42,6 +42,7 @@ const DEFAULTS = {
   button_sleep: 'button.sleep_mode_2',
   sensor_firmware: 'sensor.firmware_version',
   sensor_version: 'sensor.version',
+  theme: 'auto', // 'auto', 'light', 'dark'
 };
 
 // ── CSS Styles ──────────────────────────────────────────────────────
@@ -239,12 +240,12 @@ const CARD_STYLES = `
   }
 
   .fan-blade {
-    fill: var(--neumo-fan-idle);
+    fill: url(#blade-grad-idle);
     transition: fill 0.5s ease;
   }
 
   .fan-svg.spinning .fan-blade {
-    fill: var(--neumo-fan-active);
+    fill: url(#blade-grad);
   }
 
   .fan-center {
@@ -257,6 +258,7 @@ const CARD_STYLES = `
   .fan-svg.spinning .fan-center {
     stroke: var(--neumo-fan-active);
   }
+
 
   .fan-label {
     margin-top: 12px;
@@ -605,13 +607,38 @@ const CARD_STYLES = `
     color: var(--neumo-text-secondary);
   }
 
-  /* ── Dark mode ────────────────────────────────────────────────── */
+  /* ── Themes ─────────────────────────────────────────────────────── */
+  /* Default (Light) */
   :host {
-    color-scheme: light dark;
+    --neumo-bg: #E4E8EE;
+    --neumo-shadow-dark: rgba(163, 177, 198, 0.6);
+    --neumo-shadow-light: rgba(255, 255, 255, 0.8);
+    --neumo-shadow-dark-strong: rgba(140, 155, 175, 0.7);
+    --neumo-text: #3A3F47;
+    --neumo-text-secondary: #8A92A0;
+    --neumo-fan-idle: #B0B8C4;
+    --neumo-fan-active: #6C63FF;
+    --neumo-accent: #6C63FF;
+    --neumo-accent-glow: rgba(108, 99, 255, 0.3);
   }
 
+  /* Dark Theme Variables */
+  :host(.theme-dark) {
+    --neumo-bg: #2D3239;
+    --neumo-shadow-dark: rgba(20, 23, 28, 0.7);
+    --neumo-shadow-light: rgba(60, 66, 75, 0.5);
+    --neumo-shadow-dark-strong: rgba(15, 18, 22, 0.8);
+    --neumo-text: #E0E4E8;
+    --neumo-text-secondary: #8A92A0;
+    --neumo-fan-idle: #6B7280;
+    --neumo-fan-active: #818CF8;
+    --neumo-accent: #818CF8;
+    --neumo-accent-glow: rgba(129, 140, 248, 0.3);
+  }
+
+  /* Auto Theme (Prefers Color Scheme) */
   @media (prefers-color-scheme: dark) {
-    :host {
+    :host(:not(.theme-light)) {
       --neumo-bg: #2D3239;
       --neumo-shadow-dark: rgba(20, 23, 28, 0.7);
       --neumo-shadow-light: rgba(60, 66, 75, 0.5);
@@ -628,19 +655,41 @@ const CARD_STYLES = `
 
 // ── SVG Fan Blade ───────────────────────────────────────────────────
 const FAN_SVG = `
-<svg viewBox="0 0 100 100" class="fan-svg" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 120 120" class="fan-svg" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Blade Gradient for 3D realism -->
+    <linearGradient id="blade-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="var(--neumo-fan-active)" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="var(--neumo-fan-active)" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="blade-grad-idle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="var(--neumo-fan-idle)" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="var(--neumo-fan-idle)" stop-opacity="0.4"/>
+    </linearGradient>
+    <!-- Drop shadow for depth -->
+    <filter id="blade-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="1" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Outer casing / ring for realism -->
+  <circle cx="60" cy="60" r="54" fill="none" class="fan-casing" stroke="var(--neumo-shadow-dark)" stroke-width="2" />
+  
   <g class="fan-rotor">
-    <!-- Blades -->
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(0, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(51.43, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(102.86, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(154.29, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(205.71, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(257.14, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(308.57, 50, 50)" />
-    <!-- Center hub -->
-    <circle class="fan-center" cx="50" cy="50" r="12" />
-    <circle cx="50" cy="50" r="4" fill="var(--neumo-bg)" />
+    <!-- 5 sweeping geometric blades for industrial look -->
+    <g class="fan-blades-group" filter="url(#blade-shadow)">
+      <path class="fan-blade" d="M60 60 C55 30, 80 15, 95 18 C100 19, 105 30, 95 45 C80 65, 65 65, 60 60 Z" transform="rotate(0, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C55 30, 80 15, 95 18 C100 19, 105 30, 95 45 C80 65, 65 65, 60 60 Z" transform="rotate(72, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C55 30, 80 15, 95 18 C100 19, 105 30, 95 45 C80 65, 65 65, 60 60 Z" transform="rotate(144, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C55 30, 80 15, 95 18 C100 19, 105 30, 95 45 C80 65, 65 65, 60 60 Z" transform="rotate(216, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C55 30, 80 15, 95 18 C100 19, 105 30, 95 45 C80 65, 65 65, 60 60 Z" transform="rotate(288, 60, 60)" />
+    </g>
+
+    <!-- Center metallic hub -->
+    <circle class="fan-center-bg" cx="60" cy="60" r="14" fill="var(--neumo-shadow-dark)" />
+    <circle class="fan-center" cx="60" cy="60" r="12" />
+    <!-- Center spindle dot -->
+    <circle cx="60" cy="60" r="3" fill="var(--neumo-bg)" opacity="0.8" />
   </g>
 </svg>
 `;
@@ -776,6 +825,18 @@ class BlaubergRecuperatorCard extends HTMLElement {
       boostMode !== '0' &&
       boostMode.toLowerCase() !== 'off' &&
       boostMode.toLowerCase() !== 'inactive';
+
+    // Apply theme class to host element
+    const theme = this._config.theme || 'auto';
+    if (theme === 'dark') {
+      this.classList.add('theme-dark');
+      this.classList.remove('theme-light');
+    } else if (theme === 'light') {
+      this.classList.add('theme-light');
+      this.classList.remove('theme-dark');
+    } else {
+      this.classList.remove('theme-light', 'theme-dark');
+    }
 
     this._root.innerHTML = `
       <style>${CARD_STYLES}</style>
