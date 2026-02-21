@@ -189,28 +189,30 @@ const DEFAULTS = {
   button_reset_filter: "button.reset_filter_alarm_2",
   button_sleep: "button.sleep_mode_2",
   sensor_firmware: "sensor.firmware_version",
-  sensor_version: "sensor.version"
+  sensor_version: "sensor.version",
+  theme: "auto"
+  // 'auto', 'light', 'dark'
 };
 const CARD_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
   :host {
-    --neumo-bg: #E4E8EE;
-    --neumo-shadow-dark: rgba(163, 177, 198, 0.6);
-    --neumo-shadow-light: rgba(255, 255, 255, 0.8);
-    --neumo-shadow-dark-strong: rgba(140, 155, 175, 0.7);
-    --neumo-accent: #6C63FF;
-    --neumo-accent-glow: rgba(108, 99, 255, 0.3);
-    --neumo-success: #4ECB71;
+    --neumo-bg: #E0E5EC;
+    --neumo-shadow-dark: #A3B1C6;
+    --neumo-shadow-light: #FFFFFF;
+    --neumo-shadow-dark-strong: #8C9BAF;
+    --neumo-accent: #4A90E2;
+    --neumo-accent-glow: rgba(74, 144, 226, 0.4);
+    --neumo-success: #43A047;
     --neumo-warning: #FFB74D;
-    --neumo-danger: #FF6B6B;
-    --neumo-text: #3A3F47;
-    --neumo-text-secondary: #8A92A0;
-    --neumo-radius: 16px;
-    --neumo-radius-sm: 12px;
+    --neumo-danger: #E53935;
+    --neumo-text: #31344B;
+    --neumo-text-secondary: #8A98A8;
+    --neumo-radius: 12px;
+    --neumo-radius-sm: 8px;
     --neumo-font: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    --neumo-fan-active: #6C63FF;
-    --neumo-fan-idle: #B0B8C4;
+    --neumo-fan-active: #4A90E2;
+    --neumo-fan-idle: #9BA5B5;
 
     display: block;
     font-family: var(--neumo-font);
@@ -219,11 +221,11 @@ const CARD_STYLES = `
   /* ── Card container ───────────────────────────────────────────── */
   .card {
     background: var(--neumo-bg);
-    border-radius: 24px;
-    padding: 24px;
+    border-radius: 16px;
+    padding: 16px;
     box-shadow:
-      8px 8px 16px var(--neumo-shadow-dark),
-      -8px -8px 16px var(--neumo-shadow-light);
+      6px 6px 12px var(--neumo-shadow-dark),
+      -6px -6px 12px var(--neumo-shadow-light);
     overflow: hidden;
     position: relative;
   }
@@ -233,27 +235,27 @@ const CARD_STYLES = `
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
 
   .header-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
   }
 
   .header-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     background: var(--neumo-bg);
     box-shadow:
-      4px 4px 8px var(--neumo-shadow-dark),
-      -4px -4px 8px var(--neumo-shadow-light);
+      3px 3px 6px var(--neumo-shadow-dark),
+      -3px -3px 6px var(--neumo-shadow-light);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 16px;
   }
 
   .header-title {
@@ -317,37 +319,37 @@ const CARD_STYLES = `
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 8px 0 24px;
+    margin: 8px 0 16px;
   }
 
   .fan-container {
     position: relative;
-    width: 160px;
-    height: 160px;
+    width: 110px;
+    height: 110px;
     border-radius: 50%;
     background: var(--neumo-bg);
     box-shadow:
-      inset 6px 6px 12px var(--neumo-shadow-dark),
-      inset -6px -6px 12px var(--neumo-shadow-light);
+      inset 4px 4px 8px var(--neumo-shadow-dark),
+      inset -4px -4px 8px var(--neumo-shadow-light);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
   }
 
   .fan-container:hover {
-    transform: scale(1.03);
+    transform: scale(1.02);
   }
 
   .fan-container:active {
-    transform: scale(0.97);
+    transform: scale(0.98);
   }
 
   .fan-ring {
     position: absolute;
-    width: 148px;
-    height: 148px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     border: 2px solid transparent;
     transition: all 0.5s ease;
@@ -356,19 +358,19 @@ const CARD_STYLES = `
   .fan-ring.active {
     border-color: var(--neumo-accent);
     box-shadow:
-      0 0 15px var(--neumo-accent-glow),
-      inset 0 0 15px var(--neumo-accent-glow);
+      0 0 10px var(--neumo-accent-glow),
+      inset 0 0 10px var(--neumo-accent-glow);
     animation: ring-pulse 3s infinite;
   }
 
   @keyframes ring-pulse {
-    0%, 100% { box-shadow: 0 0 15px var(--neumo-accent-glow), inset 0 0 15px var(--neumo-accent-glow); }
-    50% { box-shadow: 0 0 25px var(--neumo-accent-glow), inset 0 0 25px var(--neumo-accent-glow); }
+    0%, 100% { box-shadow: 0 0 8px var(--neumo-accent-glow), inset 0 0 8px var(--neumo-accent-glow); }
+    50% { box-shadow: 0 0 16px var(--neumo-accent-glow), inset 0 0 16px var(--neumo-accent-glow); }
   }
 
   .fan-svg {
-    width: 110px;
-    height: 110px;
+    width: 80px;
+    height: 80px;
   }
 
   .fan-rotor {
@@ -385,12 +387,12 @@ const CARD_STYLES = `
   }
 
   .fan-blade {
-    fill: var(--neumo-fan-idle);
+    fill: url(#blade-grad-idle);
     transition: fill 0.5s ease;
   }
 
   .fan-svg.spinning .fan-blade {
-    fill: var(--neumo-fan-active);
+    fill: url(#blade-grad);
   }
 
   .fan-center {
@@ -404,24 +406,25 @@ const CARD_STYLES = `
     stroke: var(--neumo-fan-active);
   }
 
+
   .fan-label {
-    margin-top: 12px;
-    font-size: 13px;
-    font-weight: 600;
+    margin-top: 8px;
+    font-size: 10px;
+    font-weight: 700;
     color: var(--neumo-text-secondary);
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
   }
 
   .fan-rpm {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--neumo-text);
-    margin-top: 4px;
+    margin-top: 2px;
   }
 
   .fan-rpm span {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 10px;
+    font-weight: 600;
     color: var(--neumo-text-secondary);
     margin-left: 2px;
   }
@@ -431,21 +434,21 @@ const CARD_STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
-    margin: 0 0 24px;
+    gap: 12px;
+    margin: 0 0 16px;
   }
 
   .speed-btn {
-    width: 44px;
-    height: 44px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     border: none;
     background: var(--neumo-bg);
     box-shadow:
-      4px 4px 8px var(--neumo-shadow-dark),
-      -4px -4px 8px var(--neumo-shadow-light);
+      3px 3px 6px var(--neumo-shadow-dark),
+      -3px -3px 6px var(--neumo-shadow-light);
     color: var(--neumo-text);
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
@@ -457,112 +460,112 @@ const CARD_STYLES = `
 
   .speed-btn:active {
     box-shadow:
-      inset 3px 3px 6px var(--neumo-shadow-dark),
-      inset -3px -3px 6px var(--neumo-shadow-light);
+      inset 2px 2px 4px var(--neumo-shadow-dark),
+      inset -2px -2px 4px var(--neumo-shadow-light);
     transform: scale(0.95);
   }
 
   .speed-display {
-    min-width: 80px;
+    min-width: 60px;
     text-align: center;
-    padding: 10px 20px;
-    border-radius: 14px;
+    padding: 6px 16px;
+    border-radius: 10px;
     background: var(--neumo-bg);
     box-shadow:
-      inset 3px 3px 6px var(--neumo-shadow-dark),
-      inset -3px -3px 6px var(--neumo-shadow-light);
-    font-size: 18px;
+      inset 2px 2px 4px var(--neumo-shadow-dark),
+      inset -2px -2px 4px var(--neumo-shadow-light);
+    font-size: 16px;
     font-weight: 700;
     color: var(--neumo-accent);
   }
 
   .speed-display small {
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 10px;
+    font-weight: 600;
     color: var(--neumo-text-secondary);
     margin-left: 2px;
   }
 
   /* ── Sensor Grid ──────────────────────────────────────────────── */
   .section-label {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     color: var(--neumo-text-secondary);
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     padding-left: 4px;
   }
 
   .sensor-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
+    gap: 10px;
+    margin-bottom: 16px;
   }
 
   .sensor-tile {
     background: var(--neumo-bg);
     border-radius: var(--neumo-radius-sm);
-    padding: 14px;
+    padding: 10px;
     box-shadow:
-      4px 4px 8px var(--neumo-shadow-dark),
-      -4px -4px 8px var(--neumo-shadow-light);
+      3px 3px 6px var(--neumo-shadow-dark),
+      -3px -3px 6px var(--neumo-shadow-light);
     transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
   }
 
   .sensor-tile:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow:
-      6px 6px 12px var(--neumo-shadow-dark),
-      -6px -6px 12px var(--neumo-shadow-light);
+      4px 4px 8px var(--neumo-shadow-dark),
+      -4px -4px 8px var(--neumo-shadow-light);
   }
 
   .sensor-tile.alarm-active {
     box-shadow:
-      4px 4px 8px var(--neumo-shadow-dark),
-      -4px -4px 8px var(--neumo-shadow-light),
+      3px 3px 6px var(--neumo-shadow-dark),
+      -3px -3px 6px var(--neumo-shadow-light),
       inset 0 0 0 2px var(--neumo-danger);
     animation: alarm-glow 2s infinite;
   }
 
   @keyframes alarm-glow {
-    0%, 100% { box-shadow: 4px 4px 8px var(--neumo-shadow-dark), -4px -4px 8px var(--neumo-shadow-light), inset 0 0 0 2px var(--neumo-danger); }
-    50% { box-shadow: 4px 4px 8px var(--neumo-shadow-dark), -4px -4px 8px var(--neumo-shadow-light), inset 0 0 0 2px var(--neumo-danger), 0 0 12px rgba(255,107,107,0.3); }
+    0%, 100% { box-shadow: 3px 3px 6px var(--neumo-shadow-dark), -3px -3px 6px var(--neumo-shadow-light), inset 0 0 0 2px var(--neumo-danger); }
+    50% { box-shadow: 3px 3px 6px var(--neumo-shadow-dark), -3px -3px 6px var(--neumo-shadow-light), inset 0 0 0 2px var(--neumo-danger), 0 0 8px rgba(229,57,53,0.3); }
   }
 
   .sensor-icon {
-    font-size: 18px;
-    margin-bottom: 6px;
-  }
-
-  .sensor-name {
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--neumo-text-secondary);
+    font-size: 14px;
     margin-bottom: 4px;
   }
 
+  .sensor-name {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--neumo-text-secondary);
+    margin-bottom: 2px;
+  }
+
   .sensor-value {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--neumo-text);
     line-height: 1.2;
   }
 
   .sensor-value.small {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .sensor-unit {
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 9px;
+    font-weight: 600;
     color: var(--neumo-text-secondary);
-    margin-left: 2px;
+    margin-left: 1px;
   }
 
   .sensor-tile.wide {
@@ -592,49 +595,49 @@ const CARD_STYLES = `
   /* ── Action Buttons ───────────────────────────────────────────── */
   .actions {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
   .action-btn {
     flex: 1;
-    padding: 12px 8px;
+    padding: 8px 6px;
     border-radius: var(--neumo-radius-sm);
     border: none;
     background: var(--neumo-bg);
     box-shadow:
-      4px 4px 8px var(--neumo-shadow-dark),
-      -4px -4px 8px var(--neumo-shadow-light);
+      3px 3px 6px var(--neumo-shadow-dark),
+      -3px -3px 6px var(--neumo-shadow-light);
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     transition: all 0.15s ease;
     font-family: var(--neumo-font);
   }
 
   .action-btn:active {
     box-shadow:
-      inset 3px 3px 6px var(--neumo-shadow-dark),
-      inset -3px -3px 6px var(--neumo-shadow-light);
+      inset 2px 2px 4px var(--neumo-shadow-dark),
+      inset -2px -2px 4px var(--neumo-shadow-light);
     transform: scale(0.96);
   }
 
   .action-btn:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow:
-      6px 6px 12px var(--neumo-shadow-dark),
-      -6px -6px 12px var(--neumo-shadow-light);
+      4px 4px 8px var(--neumo-shadow-dark),
+      -4px -4px 8px var(--neumo-shadow-light);
   }
 
   .action-icon {
-    font-size: 22px;
+    font-size: 16px;
   }
 
   .action-label {
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 9px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     color: var(--neumo-text-secondary);
@@ -751,40 +754,86 @@ const CARD_STYLES = `
     color: var(--neumo-text-secondary);
   }
 
-  /* ── Dark mode ────────────────────────────────────────────────── */
+  /* ── Themes ─────────────────────────────────────────────────────── */
+  /* Default (Light) */
   :host {
-    color-scheme: light dark;
+    --neumo-bg: #E0E5EC;
+    --neumo-shadow-dark: #A3B1C6;
+    --neumo-shadow-light: #FFFFFF;
+    --neumo-shadow-dark-strong: #8C9BAF;
+    --neumo-text: #31344B;
+    --neumo-text-secondary: #8A98A8;
+    --neumo-fan-idle: #9BA5B5;
+    --neumo-fan-active: #4A90E2;
+    --neumo-accent: #4A90E2;
+    --neumo-accent-glow: rgba(74, 144, 226, 0.4);
   }
 
+  /* Dark Theme Variables */
+  :host(.theme-dark) {
+    --neumo-bg: #2B2E33;
+    --neumo-shadow-dark: #1E2024;
+    --neumo-shadow-light: #383C42;
+    --neumo-shadow-dark-strong: #17181A;
+    --neumo-text: #E4E8F0;
+    --neumo-text-secondary: #8992A3;
+    --neumo-fan-idle: #5A6270;
+    --neumo-fan-active: #4A90E2;
+    --neumo-accent: #4A90E2;
+    --neumo-accent-glow: rgba(74, 144, 226, 0.3);
+  }
+
+  /* Auto Theme (Prefers Color Scheme) */
   @media (prefers-color-scheme: dark) {
-    :host {
-      --neumo-bg: #2D3239;
-      --neumo-shadow-dark: rgba(20, 23, 28, 0.7);
-      --neumo-shadow-light: rgba(60, 66, 75, 0.5);
-      --neumo-shadow-dark-strong: rgba(15, 18, 22, 0.8);
-      --neumo-text: #E0E4E8;
-      --neumo-text-secondary: #8A92A0;
-      --neumo-fan-idle: #6B7280;
-      --neumo-fan-active: #818CF8;
-      --neumo-accent: #818CF8;
-      --neumo-accent-glow: rgba(129, 140, 248, 0.3);
+    :host(:not(.theme-light)) {
+      --neumo-bg: #2B2E33;
+      --neumo-shadow-dark: #1E2024;
+      --neumo-shadow-light: #383C42;
+      --neumo-shadow-dark-strong: #17181A;
+      --neumo-text: #E4E8F0;
+      --neumo-text-secondary: #8992A3;
+      --neumo-fan-idle: #5A6270;
+      --neumo-fan-active: #4A90E2;
+      --neumo-accent: #4A90E2;
+      --neumo-accent-glow: rgba(74, 144, 226, 0.3);
     }
   }
 `;
 const FAN_SVG = `
-<svg viewBox="0 0 100 100" class="fan-svg" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 120 120" class="fan-svg" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Blade Gradient for realism -->
+    <linearGradient id="blade-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="var(--neumo-fan-active)" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="var(--neumo-fan-active)" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="blade-grad-idle" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="var(--neumo-fan-idle)" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="var(--neumo-fan-idle)" stop-opacity="0.5"/>
+    </linearGradient>
+    <!-- Drop shadow for depth -->
+    <filter id="blade-shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Outer vent casing ring (gives it an exhaust fan look) -->
+  <circle cx="60" cy="60" r="54" fill="none" class="fan-casing" stroke="var(--neumo-shadow-dark)" stroke-width="3" opacity="0.6" />
+  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--neumo-shadow-light)" stroke-width="1" opacity="0.5" />
+  
   <g class="fan-rotor">
-    <!-- Blades -->
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(0, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(51.43, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(102.86, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(154.29, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(205.71, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(257.14, 50, 50)" />
-    <path class="fan-blade" d="M50 50 C45 30, 60 10, 75 15 C80 17, 85 25, 70 35 C60 40, 55 45, 50 50 Z" transform="rotate(308.57, 50, 50)" />
-    <!-- Center hub -->
-    <circle class="fan-center" cx="50" cy="50" r="12" />
-    <circle cx="50" cy="50" r="4" fill="var(--neumo-bg)" />
+    <!-- 4 wide, curved aerodynamic blades for a ventilation fan -->
+    <g class="fan-blades-group" filter="url(#blade-shadow)">
+      <path class="fan-blade" d="M60 60 C40 20, 85 15, 95 30 C105 45, 80 55, 60 60 Z" transform="rotate(0, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C40 20, 85 15, 95 30 C105 45, 80 55, 60 60 Z" transform="rotate(90, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C40 20, 85 15, 95 30 C105 45, 80 55, 60 60 Z" transform="rotate(180, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C40 20, 85 15, 95 30 C105 45, 80 55, 60 60 Z" transform="rotate(270, 60, 60)" />
+    </g>
+
+    <!-- Center Hub Assembly -->
+    <circle class="fan-center-bg" cx="60" cy="60" r="14" fill="var(--neumo-shadow-dark)" />
+    <circle class="fan-center" cx="60" cy="60" r="11" />
+    <circle cx="60" cy="60" r="3" fill="var(--neumo-bg)" />
   </g>
 </svg>
 `;
@@ -888,6 +937,16 @@ class BlaubergRecuperatorCard extends HTMLElement {
     const version = this._stateVal("sensor_version");
     const isAlarmActive = alarm !== "—" && alarm !== "0" && alarm.toLowerCase() !== "off" && alarm.toLowerCase() !== "none" && alarm.toLowerCase() !== "no alarm";
     const isBoostActive = boostMode !== "—" && boostMode !== "0" && boostMode.toLowerCase() !== "off" && boostMode.toLowerCase() !== "inactive";
+    const theme = this._config.theme || "auto";
+    if (theme === "dark") {
+      this.classList.add("theme-dark");
+      this.classList.remove("theme-light");
+    } else if (theme === "light") {
+      this.classList.add("theme-light");
+      this.classList.remove("theme-dark");
+    } else {
+      this.classList.remove("theme-light", "theme-dark");
+    }
     this._root.innerHTML = `
       <style>${CARD_STYLES}</style>
       <ha-card>

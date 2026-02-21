@@ -4,10 +4,13 @@
   "description": "Neumorphic Home Assistant card for Blauberg wall-mounted recuperators",
   "main": "dist/blauberg-recuperator-card.js",
   "scripts": {
-    "build": "vite build && cp dist/blauberg-recuperator-card.js ./",
+    "build": "vite build && node -e \"require('fs').copyFileSync('dist/blauberg-recuperator-card.js', 'blauberg-recuperator-card.js')\"",
     "dev": "vite build --watch"
   },
   "devDependencies": {
+    "cross-var": "^1.1.0",
+    "fs-extra": "^11.3.3",
+    "npm-run-all": "^4.1.5",
     "typescript": "^5.3.3",
     "vite": "^5.1.0"
   },
