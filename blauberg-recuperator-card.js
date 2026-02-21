@@ -256,7 +256,7 @@ const CARD_STYLES = `
   .header-left {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
   }
 
   .header-icon {
@@ -270,18 +270,18 @@ const CARD_STYLES = `
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    font-size: 14px;
   }
 
   .header-title {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--neumo-text);
     letter-spacing: -0.2px;
   }
 
   .header-subtitle {
-    font-size: 9px;
+    font-size: 11px;
     color: var(--neumo-text-secondary);
     margin-top: 1px;
     font-weight: 400;
@@ -290,10 +290,10 @@ const CARD_STYLES = `
   .header-status {
     display: flex;
     align-items: center;
-    gap: 3px;
+    gap: 4px;
     padding: 3px 8px;
     border-radius: 12px;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.2px;
@@ -423,22 +423,22 @@ const CARD_STYLES = `
 
 
   .fan-label {
-    margin-top: 4px;
-    font-size: 9px;
+    margin-top: 6px;
+    font-size: 10px;
     font-weight: 600;
     color: var(--neumo-text-secondary);
     letter-spacing: 0.2px;
   }
 
   .fan-rpm {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--neumo-text);
     margin-top: -2px;
   }
 
   .fan-rpm span {
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 500;
     color: var(--neumo-text-secondary);
     margin-left: 2px;
@@ -463,7 +463,7 @@ const CARD_STYLES = `
       2px 2px 5px var(--neumo-shadow-dark),
       -2px -2px 5px var(--neumo-shadow-light);
     color: var(--neumo-text);
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
@@ -489,13 +489,13 @@ const CARD_STYLES = `
     box-shadow:
       inset 1px 1px 3px var(--neumo-shadow-dark),
       inset -1px -1px 3px var(--neumo-shadow-light);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--neumo-accent);
   }
 
   .speed-display small {
-    font-size: 8px;
+    font-size: 10px;
     font-weight: 500;
     color: var(--neumo-text-secondary);
     margin-left: 1px;
@@ -503,7 +503,7 @@ const CARD_STYLES = `
 
   /* ── Sensor Grid ──────────────────────────────────────────────── */
   .section-label {
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.2px;
@@ -516,13 +516,13 @@ const CARD_STYLES = `
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 6px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
 
   .sensor-tile {
     background: var(--neumo-bg);
     border-radius: var(--neumo-radius-sm);
-    padding: 6px;
+    padding: 8px 6px;
     box-shadow:
       2px 2px 4px var(--neumo-shadow-dark),
       -2px -2px 4px var(--neumo-shadow-light);
@@ -552,32 +552,32 @@ const CARD_STYLES = `
   }
 
   .sensor-icon {
-    font-size: 11px;
-    margin-bottom: 1px;
+    font-size: 14px;
+    margin-bottom: 2px;
   }
 
   .sensor-name {
-    font-size: 7px;
+    font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.2px;
     color: var(--neumo-text-secondary);
-    margin-bottom: 1px;
+    margin-bottom: 2px;
   }
 
   .sensor-value {
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--neumo-text);
     line-height: 1.1;
   }
 
   .sensor-value.small {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   .sensor-unit {
-    font-size: 7px;
+    font-size: 10px;
     font-weight: 500;
     color: var(--neumo-text-secondary);
     margin-left: 1px;
@@ -610,13 +610,13 @@ const CARD_STYLES = `
   /* ── Action Buttons ───────────────────────────────────────────── */
   .actions {
     display: flex;
-    gap: 4px;
+    gap: 6px;
     margin-bottom: 8px;
   }
 
   .action-btn {
     flex: 1;
-    padding: 6px 2px;
+    padding: 8px 4px;
     border-radius: var(--neumo-radius-sm);
     border: none;
     background: var(--neumo-bg);
@@ -627,7 +627,7 @@ const CARD_STYLES = `
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 4px;
     transition: all 0.15s ease;
     font-family: var(--neumo-font);
   }
@@ -647,13 +647,12 @@ const CARD_STYLES = `
   }
 
   .action-icon {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .action-label {
-    font-size: 7px;
+    font-size: 10px;
     font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.1px;
     color: var(--neumo-text-secondary);
     text-align: center;
@@ -680,7 +679,7 @@ const CARD_STYLES = `
   }
 
   .info-label {
-    font-size: 7px;
+    font-size: 8px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.3px;
@@ -688,7 +687,7 @@ const CARD_STYLES = `
   }
 
   .info-value {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--neumo-text);
   }
