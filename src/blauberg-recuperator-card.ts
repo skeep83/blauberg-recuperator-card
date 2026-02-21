@@ -66,7 +66,7 @@ const CARD_STYLES = `
     --neumo-text-secondary: #8A98A8;
     --neumo-radius: 12px;
     --neumo-radius-sm: 8px;
-    --neumo-font: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    --neumo-font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --neumo-fan-active: #4A90E2;
     --neumo-fan-idle: #9BA5B5;
 
@@ -77,11 +77,11 @@ const CARD_STYLES = `
   /* ── Card container ───────────────────────────────────────────── */
   .card {
     background: var(--neumo-bg);
-    border-radius: 16px;
-    padding: 16px;
+    border-radius: 14px;
+    padding: 12px;
     box-shadow:
-      6px 6px 12px var(--neumo-shadow-dark),
-      -6px -6px 12px var(--neumo-shadow-light);
+      5px 5px 10px var(--neumo-shadow-dark),
+      -5px -5px 10px var(--neumo-shadow-light);
     overflow: hidden;
     position: relative;
   }
@@ -101,47 +101,47 @@ const CARD_STYLES = `
   }
 
   .header-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
     background: var(--neumo-bg);
     box-shadow:
-      3px 3px 6px var(--neumo-shadow-dark),
-      -3px -3px 6px var(--neumo-shadow-light);
+      2px 2px 4px var(--neumo-shadow-dark),
+      -2px -2px 4px var(--neumo-shadow-light);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .header-title {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--neumo-text);
-    letter-spacing: -0.3px;
+    letter-spacing: -0.2px;
   }
 
   .header-subtitle {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--neumo-text-secondary);
-    margin-top: 2px;
-    font-weight: 500;
+    margin-top: 1px;
+    font-weight: 400;
   }
 
   .header-status {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 11px;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     background: var(--neumo-bg);
     box-shadow:
-      inset 2px 2px 4px var(--neumo-shadow-dark),
-      inset -2px -2px 4px var(--neumo-shadow-light);
+      inset 1px 1px 3px var(--neumo-shadow-dark),
+      inset -1px -1px 3px var(--neumo-shadow-light);
     transition: all 0.3s ease;
   }
 
@@ -175,18 +175,18 @@ const CARD_STYLES = `
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin: 8px 0 16px;
+    margin: 4px 0 12px;
   }
 
   .fan-container {
     position: relative;
-    width: 110px;
-    height: 110px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
     background: var(--neumo-bg);
     box-shadow:
-      inset 4px 4px 8px var(--neumo-shadow-dark),
-      inset -4px -4px 8px var(--neumo-shadow-light);
+      inset 3px 3px 6px var(--neumo-shadow-dark),
+      inset -3px -3px 6px var(--neumo-shadow-light);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -204,8 +204,8 @@ const CARD_STYLES = `
 
   .fan-ring {
     position: absolute;
-    width: 100px;
-    height: 100px;
+    width: 92px;
+    height: 92px;
     border-radius: 50%;
     border: 2px solid transparent;
     transition: all 0.5s ease;
@@ -264,23 +264,23 @@ const CARD_STYLES = `
 
 
   .fan-label {
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--neumo-text-secondary);
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
   }
 
   .fan-rpm {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--neumo-text);
-    margin-top: 2px;
+    margin-top: 0;
   }
 
   .fan-rpm span {
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 9px;
+    font-weight: 500;
     color: var(--neumo-text-secondary);
     margin-left: 2px;
   }
@@ -291,20 +291,20 @@ const CARD_STYLES = `
     align-items: center;
     justify-content: center;
     gap: 12px;
-    margin: 0 0 16px;
+    margin: 0 0 12px;
   }
 
   .speed-btn {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     border: none;
     background: var(--neumo-bg);
     box-shadow:
-      3px 3px 6px var(--neumo-shadow-dark),
-      -3px -3px 6px var(--neumo-shadow-light);
+      2px 2px 5px var(--neumo-shadow-dark),
+      -2px -2px 5px var(--neumo-shadow-light);
     color: var(--neumo-text);
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
@@ -316,57 +316,57 @@ const CARD_STYLES = `
 
   .speed-btn:active {
     box-shadow:
-      inset 2px 2px 4px var(--neumo-shadow-dark),
-      inset -2px -2px 4px var(--neumo-shadow-light);
+      inset 1px 1px 3px var(--neumo-shadow-dark),
+      inset -1px -1px 3px var(--neumo-shadow-light);
     transform: scale(0.95);
   }
 
   .speed-display {
-    min-width: 60px;
+    min-width: 50px;
     text-align: center;
-    padding: 6px 16px;
-    border-radius: 10px;
+    padding: 6px 12px;
+    border-radius: 8px;
     background: var(--neumo-bg);
     box-shadow:
-      inset 2px 2px 4px var(--neumo-shadow-dark),
-      inset -2px -2px 4px var(--neumo-shadow-light);
-    font-size: 16px;
-    font-weight: 700;
+      inset 1px 1px 3px var(--neumo-shadow-dark),
+      inset -1px -1px 3px var(--neumo-shadow-light);
+    font-size: 14px;
+    font-weight: 600;
     color: var(--neumo-accent);
   }
 
   .speed-display small {
-    font-size: 10px;
-    font-weight: 600;
+    font-size: 9px;
+    font-weight: 500;
     color: var(--neumo-text-secondary);
     margin-left: 2px;
   }
 
   /* ── Sensor Grid ──────────────────────────────────────────────── */
   .section-label {
-    font-size: 10px;
-    font-weight: 700;
+    font-size: 9px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     color: var(--neumo-text-secondary);
-    margin-bottom: 8px;
-    padding-left: 4px;
+    margin-bottom: 6px;
+    padding-left: 2px;
   }
 
   .sensor-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
   .sensor-tile {
     background: var(--neumo-bg);
     border-radius: var(--neumo-radius-sm);
-    padding: 10px;
+    padding: 8px;
     box-shadow:
-      3px 3px 6px var(--neumo-shadow-dark),
-      -3px -3px 6px var(--neumo-shadow-light);
+      2px 2px 4px var(--neumo-shadow-dark),
+      -2px -2px 4px var(--neumo-shadow-light);
     transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
@@ -375,51 +375,51 @@ const CARD_STYLES = `
   .sensor-tile:hover {
     transform: translateY(-1px);
     box-shadow:
-      4px 4px 8px var(--neumo-shadow-dark),
-      -4px -4px 8px var(--neumo-shadow-light);
+      3px 3px 6px var(--neumo-shadow-dark),
+      -3px -3px 6px var(--neumo-shadow-light);
   }
 
   .sensor-tile.alarm-active {
     box-shadow:
-      3px 3px 6px var(--neumo-shadow-dark),
-      -3px -3px 6px var(--neumo-shadow-light),
-      inset 0 0 0 2px var(--neumo-danger);
+      2px 2px 4px var(--neumo-shadow-dark),
+      -2px -2px 4px var(--neumo-shadow-light),
+      inset 0 0 0 1px var(--neumo-danger);
     animation: alarm-glow 2s infinite;
   }
 
   @keyframes alarm-glow {
-    0%, 100% { box-shadow: 3px 3px 6px var(--neumo-shadow-dark), -3px -3px 6px var(--neumo-shadow-light), inset 0 0 0 2px var(--neumo-danger); }
-    50% { box-shadow: 3px 3px 6px var(--neumo-shadow-dark), -3px -3px 6px var(--neumo-shadow-light), inset 0 0 0 2px var(--neumo-danger), 0 0 8px rgba(229,57,53,0.3); }
+    0%, 100% { box-shadow: 2px 2px 4px var(--neumo-shadow-dark), -2px -2px 4px var(--neumo-shadow-light), inset 0 0 0 1px var(--neumo-danger); }
+    50% { box-shadow: 2px 2px 4px var(--neumo-shadow-dark), -2px -2px 4px var(--neumo-shadow-light), inset 0 0 0 1px var(--neumo-danger), 0 0 6px rgba(229,57,53,0.3); }
   }
 
   .sensor-icon {
-    font-size: 14px;
-    margin-bottom: 4px;
+    font-size: 12px;
+    margin-bottom: 2px;
   }
 
   .sensor-name {
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 8px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
     color: var(--neumo-text-secondary);
     margin-bottom: 2px;
   }
 
   .sensor-value {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: 12px;
+    font-weight: 600;
     color: var(--neumo-text);
     line-height: 1.2;
   }
 
   .sensor-value.small {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .sensor-unit {
-    font-size: 9px;
-    font-weight: 600;
+    font-size: 8px;
+    font-weight: 500;
     color: var(--neumo-text-secondary);
     margin-left: 1px;
   }
@@ -451,51 +451,51 @@ const CARD_STYLES = `
   /* ── Action Buttons ───────────────────────────────────────────── */
   .actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 12px;
   }
 
   .action-btn {
     flex: 1;
-    padding: 8px 6px;
+    padding: 6px 4px;
     border-radius: var(--neumo-radius-sm);
     border: none;
     background: var(--neumo-bg);
     box-shadow:
-      3px 3px 6px var(--neumo-shadow-dark),
-      -3px -3px 6px var(--neumo-shadow-light);
+      2px 2px 4px var(--neumo-shadow-dark),
+      -2px -2px 4px var(--neumo-shadow-light);
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 2px;
     transition: all 0.15s ease;
     font-family: var(--neumo-font);
   }
 
   .action-btn:active {
     box-shadow:
-      inset 2px 2px 4px var(--neumo-shadow-dark),
-      inset -2px -2px 4px var(--neumo-shadow-light);
+      inset 1px 1px 2px var(--neumo-shadow-dark),
+      inset -1px -1px 2px var(--neumo-shadow-light);
     transform: scale(0.96);
   }
 
   .action-btn:hover {
     transform: translateY(-1px);
     box-shadow:
-      4px 4px 8px var(--neumo-shadow-dark),
-      -4px -4px 8px var(--neumo-shadow-light);
+      3px 3px 5px var(--neumo-shadow-dark),
+      -3px -3px 5px var(--neumo-shadow-light);
   }
 
   .action-icon {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .action-label {
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 8px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
     color: var(--neumo-text-secondary);
     text-align: center;
   }
@@ -655,26 +655,25 @@ const FAN_SVG = `
     </linearGradient>
     <!-- Drop shadow for depth -->
     <filter id="blade-shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#000" flood-opacity="0.25"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.15"/>
     </filter>
   </defs>
 
-  <!-- Outer vent casing ring (gives it an exhaust fan look) -->
-  <circle cx="60" cy="60" r="54" fill="none" class="fan-casing" stroke="var(--neumo-shadow-dark)" stroke-width="3" opacity="0.6" />
-  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--neumo-shadow-light)" stroke-width="1" opacity="0.5" />
+  <!-- Outer vent casing ring -->
+  <circle cx="60" cy="60" r="54" fill="none" class="fan-casing" stroke="var(--neumo-shadow-dark)" stroke-width="2" opacity="0.5" />
   
   <g class="fan-rotor">
-    <!-- 4 wide, curved aerodynamic blades for a ventilation fan -->
+    <!-- 4 perfectly centered symmetrical blades -->
     <g class="fan-blades-group" filter="url(#blade-shadow)">
-      <path class="fan-blade" d="M60 60 C40 20, 85 15, 95 30 C105 45, 80 55, 60 60 Z" transform="rotate(0, 60, 60)" />
-      <path class="fan-blade" d="M60 60 C40 20, 85 15, 95 30 C105 45, 80 55, 60 60 Z" transform="rotate(90, 60, 60)" />
-      <path class="fan-blade" d="M60 60 C40 20, 85 15, 95 30 C105 45, 80 55, 60 60 Z" transform="rotate(180, 60, 60)" />
-      <path class="fan-blade" d="M60 60 C40 20, 85 15, 95 30 C105 45, 80 55, 60 60 Z" transform="rotate(270, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C50 20, 80 20, 90 40 C100 60, 80 65, 60 60 Z" transform="rotate(0, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C50 20, 80 20, 90 40 C100 60, 80 65, 60 60 Z" transform="rotate(90, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C50 20, 80 20, 90 40 C100 60, 80 65, 60 60 Z" transform="rotate(180, 60, 60)" />
+      <path class="fan-blade" d="M60 60 C50 20, 80 20, 90 40 C100 60, 80 65, 60 60 Z" transform="rotate(270, 60, 60)" />
     </g>
 
     <!-- Center Hub Assembly -->
-    <circle class="fan-center-bg" cx="60" cy="60" r="14" fill="var(--neumo-shadow-dark)" />
-    <circle class="fan-center" cx="60" cy="60" r="11" />
+    <circle class="fan-center-bg" cx="60" cy="60" r="12" fill="var(--neumo-shadow-dark)" />
+    <circle class="fan-center" cx="60" cy="60" r="10" />
     <circle cx="60" cy="60" r="3" fill="var(--neumo-bg)" />
   </g>
 </svg>
@@ -914,7 +913,7 @@ class BlaubergRecuperatorCard extends HTMLElement {
             <!-- Filter Timer -->
             <div class="sensor-tile wide">
               <div class="sensor-icon">🔄</div>
-              <div class="sensor-name">Фильтр</div>
+              <div class="sensor-name">Фильтр (дней)</div>
               <div class="sensor-value small">${filterTimer}</div>
               <div class="filter-progress">
                 <div class="filter-progress-bar" style="width: ${this._getFilterProgress(filterTimer)}%"></div>
@@ -974,11 +973,13 @@ class BlaubergRecuperatorCard extends HTMLElement {
   /* ── Filter progress helper ────────────────────────────────────── */
   private _getFilterProgress(value: string): number {
     if (value === '—') return 100;
-    const num = parseInt(value, 10);
-    if (isNaN(num)) return 50;
-    // Assume max filter life of ~720 hours (30 days)
-    const maxHours = 720;
-    return Math.max(0, Math.min(100, (num / maxHours) * 100));
+    const days = parseInt(value, 10);
+    if (isNaN(days)) return 50;
+    // Common standard for Recuperator is ~365 days or 120 days.
+    // If user's integration reports "120" starting from a reset, we can assume typical scale.
+    // Blauberg often uses 90 days (2160h) or custom. Let's use 365 as scale start, or 120 if it clearly operates on a 120 scale.
+    const maxDays = days > 120 ? 365 : 120;
+    return Math.max(0, Math.min(100, (days / maxDays) * 100));
   }
 
   /* ── Card sizing ───────────────────────────────────────────────── */
