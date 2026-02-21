@@ -1,6 +1,7 @@
 const EDITOR_FIELDS = [
   { key: "title", label: "Название карточки" },
   { key: "subtitle", label: "Подзаголовок (IP адрес)" },
+  { key: "theme", label: "Тема", options: [{ value: "auto", label: "Авто (Системная)" }, { value: "light", label: "Светлая" }, { value: "dark", label: "Темная" }] },
   { key: "fan_entity", label: "Вентилятор", domain: "fan" },
   { key: "sensor_alarm", label: "Тревога", domain: "sensor" },
   { key: "sensor_boost_mode", label: "Буст режим", domain: "sensor" },
@@ -113,16 +114,30 @@ class BlaubergRecuperatorCardEditor extends HTMLElement {
     if (!this._hass || !this._config) return;
     let sections = "";
     const textFields = EDITOR_FIELDS.filter((f) => !f.domain);
-    sections += textFields.map(
-      (f) => `
-      <div class="field">
-        <label>${f.label}</label>
-        <input type="text" data-key="${f.key}"
-               value="${this._config[f.key] || ""}"
-               placeholder="${f.label}" />
-      </div>
-    `
-    ).join("");
+    sections += textFields.map((f) => {
+      if (f.options) {
+        const current = this._config[f.key] || "auto";
+        const opts = f.options.map(
+          (o) => `<option value="${o.value}" ${current === o.value ? "selected" : ""}>${o.label}</option>`
+        ).join("");
+        return `
+            <div class="field">
+              <label>${f.label}</label>
+              <select data-key="${f.key}">
+                ${opts}
+              </select>
+            </div>
+          `;
+      }
+      return `
+          <div class="field">
+            <label>${f.label}</label>
+            <input type="text" data-key="${f.key}"
+                   value="${this._config[f.key] || ""}"
+                   placeholder="${f.label}" />
+          </div>
+        `;
+    }).join("");
     const domains = ["fan", "sensor", "button"];
     const domainLabels = {
       fan: "🌀 Вентилятор",
@@ -782,22 +797,6 @@ const CARD_STYLES = `
     --neumo-accent: #4A90E2;
     --neumo-accent-glow: rgba(74, 144, 226, 0.3);
   }
-
-  /* Auto Theme (Prefers Color Scheme) */
-  @media (prefers-color-scheme: dark) {
-    :host(:not(.theme-light)) {
-      --neumo-bg: #2B2E33;
-      --neumo-shadow-dark: #1E2024;
-      --neumo-shadow-light: #383C42;
-      --neumo-shadow-dark-strong: #17181A;
-      --neumo-text: #E4E8F0;
-      --neumo-text-secondary: #8992A3;
-      --neumo-fan-idle: #5A6270;
-      --neumo-fan-active: #4A90E2;
-      --neumo-accent: #4A90E2;
-      --neumo-accent-glow: rgba(74, 144, 226, 0.3);
-    }
-  }
 `;
 const FAN_SVG = `
 <svg viewBox="0 0 120 120" class="fan-svg" xmlns="http://www.w3.org/2000/svg">
@@ -920,7 +919,7 @@ class BlaubergRecuperatorCard extends HTMLElement {
   }
   /* ── Render ────────────────────────────────────────────────────── */
   _render() {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g;
     if (!this._hass || !this._config) return;
     this._state("fan_entity");
     const isFanOn = this._isFanOn();
@@ -938,14 +937,20 @@ class BlaubergRecuperatorCard extends HTMLElement {
     const isAlarmActive = alarm !== "—" && alarm !== "0" && alarm.toLowerCase() !== "off" && alarm.toLowerCase() !== "none" && alarm.toLowerCase() !== "no alarm";
     const isBoostActive = boostMode !== "—" && boostMode !== "0" && boostMode.toLowerCase() !== "off" && boostMode.toLowerCase() !== "inactive";
     const theme = this._config.theme || "auto";
+    let isDark = false;
     if (theme === "dark") {
+      isDark = true;
+    } else if (theme === "light") {
+      isDark = false;
+    } else {
+      isDark = ((_a = this._hass.themes) == null ? void 0 : _a.darkMode) === true;
+    }
+    if (isDark) {
       this.classList.add("theme-dark");
       this.classList.remove("theme-light");
-    } else if (theme === "light") {
+    } else {
       this.classList.add("theme-light");
       this.classList.remove("theme-dark");
-    } else {
-      this.classList.remove("theme-light", "theme-dark");
     }
     this._root.innerHTML = `
       <style>${CARD_STYLES}</style>
@@ -1075,12 +1080,12 @@ class BlaubergRecuperatorCard extends HTMLElement {
         </div>
       </ha-card>
     `;
-    (_a = this._root.getElementById("fan-toggle")) == null ? void 0 : _a.addEventListener("click", () => this._toggleFan());
-    (_b = this._root.getElementById("speed-down")) == null ? void 0 : _b.addEventListener("click", () => this._setSpeed(-1));
-    (_c = this._root.getElementById("speed-up")) == null ? void 0 : _c.addEventListener("click", () => this._setSpeed(1));
-    (_d = this._root.getElementById("btn-party")) == null ? void 0 : _d.addEventListener("click", () => this._pressButton("button_party"));
-    (_e = this._root.getElementById("btn-sleep")) == null ? void 0 : _e.addEventListener("click", () => this._pressButton("button_sleep"));
-    (_f = this._root.getElementById("btn-reset-filter")) == null ? void 0 : _f.addEventListener("click", () => this._pressButton("button_reset_filter"));
+    (_b = this._root.getElementById("fan-toggle")) == null ? void 0 : _b.addEventListener("click", () => this._toggleFan());
+    (_c = this._root.getElementById("speed-down")) == null ? void 0 : _c.addEventListener("click", () => this._setSpeed(-1));
+    (_d = this._root.getElementById("speed-up")) == null ? void 0 : _d.addEventListener("click", () => this._setSpeed(1));
+    (_e = this._root.getElementById("btn-party")) == null ? void 0 : _e.addEventListener("click", () => this._pressButton("button_party"));
+    (_f = this._root.getElementById("btn-sleep")) == null ? void 0 : _f.addEventListener("click", () => this._pressButton("button_sleep"));
+    (_g = this._root.getElementById("btn-reset-filter")) == null ? void 0 : _g.addEventListener("click", () => this._pressButton("button_reset_filter"));
   }
   /* ── Filter progress helper ────────────────────────────────────── */
   _getFilterProgress(value) {

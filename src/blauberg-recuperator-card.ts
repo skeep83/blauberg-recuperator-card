@@ -15,6 +15,9 @@ interface HassEntity {
 
 interface HomeAssistant {
   states: Record<string, HassEntity>;
+  themes?: {
+    darkMode: boolean;
+  };
   callService(
     domain: string,
     service: string,
@@ -635,22 +638,6 @@ const CARD_STYLES = `
     --neumo-accent: #4A90E2;
     --neumo-accent-glow: rgba(74, 144, 226, 0.3);
   }
-
-  /* Auto Theme (Prefers Color Scheme) */
-  @media (prefers-color-scheme: dark) {
-    :host(:not(.theme-light)) {
-      --neumo-bg: #2B2E33;
-      --neumo-shadow-dark: #1E2024;
-      --neumo-shadow-light: #383C42;
-      --neumo-shadow-dark-strong: #17181A;
-      --neumo-text: #E4E8F0;
-      --neumo-text-secondary: #8992A3;
-      --neumo-fan-idle: #5A6270;
-      --neumo-fan-active: #4A90E2;
-      --neumo-accent: #4A90E2;
-      --neumo-accent-glow: rgba(74, 144, 226, 0.3);
-    }
-  }
 `;
 
 // ── SVG Fan Blade ───────────────────────────────────────────────────
@@ -827,14 +814,23 @@ class BlaubergRecuperatorCard extends HTMLElement {
 
     // Apply theme class to host element
     const theme = this._config.theme || 'auto';
+    let isDark = false;
+
     if (theme === 'dark') {
+      isDark = true;
+    } else if (theme === 'light') {
+      isDark = false;
+    } else {
+      // auto
+      isDark = this._hass.themes?.darkMode === true;
+    }
+
+    if (isDark) {
       this.classList.add('theme-dark');
       this.classList.remove('theme-light');
-    } else if (theme === 'light') {
+    } else {
       this.classList.add('theme-light');
       this.classList.remove('theme-dark');
-    } else {
-      this.classList.remove('theme-light', 'theme-dark');
     }
 
     this._root.innerHTML = `
