@@ -136,8 +136,8 @@ Output: `dist/blauberg-recuperator-card.js`
 
 ## 🔗 Related
 
+- [Siku Integration](https://github.com/hmn/siku-integration) — Required HA integration for Siku/Blauberg recuperators
 - [Altal Heater Card](https://github.com/skeep83/altal_heater_card) — Neumorphic card for Altal heat pumps (same design language)
-- [Blauberg HACS Integration](https://github.com/49sihn/blauberg_fan) — Blauberg fan integration for HA
 
 ## 📄 License
 
