@@ -63,22 +63,56 @@ class BlaubergRecuperatorCard extends HTMLElement {
 
   static getStubConfig() {
     return {
-      devices: [{
-        name: 'Рекуператор',
-        fan_entity: 'fan.siku_blauberg_fan_192_168_1_41',
-        sensor_alarm: 'sensor.alarm',
-        sensor_boost_mode: 'sensor.boost_mode',
-        sensor_filter_timer: 'sensor.filter_timer_countdown',
-        sensor_humidity: 'sensor.humidity',
-        sensor_mode: 'sensor.mode',
-        sensor_rpm: 'sensor.rpm',
-        sensor_timer: 'sensor.timer_countdown',
-        button_party: 'button.party_mode_2',
-        button_reset_filter: 'button.reset_filter_alarm_2',
-        button_sleep: 'button.sleep_mode_2',
-        sensor_firmware: 'sensor.firmware_version',
-        sensor_version: 'sensor.version',
-      }],
+      devices: [
+        {
+          name: 'Спальня Амели',
+          fan_entity: 'fan.siku_blauberg_fan_192_168_1_41',
+          sensor_alarm: 'sensor.alarm',
+          sensor_boost_mode: 'sensor.boost_mode',
+          sensor_filter_timer: 'sensor.filter_timer_countdown',
+          sensor_humidity: 'sensor.humidity',
+          sensor_mode: 'sensor.mode',
+          sensor_rpm: 'sensor.rpm',
+          sensor_timer: 'sensor.timer_countdown',
+          button_party: 'button.party_mode',
+          button_reset_filter: 'button.reset_filter_alarm',
+          button_sleep: 'button.sleep_mode_2',
+          sensor_firmware: 'sensor.firmware_version',
+          sensor_version: 'sensor.version',
+        },
+        {
+          name: 'Мастер Спальня',
+          fan_entity: 'fan.siku_blauberg_fan_192_168_1_49',
+          sensor_alarm: 'sensor.alarm_3',
+          sensor_boost_mode: 'sensor.boost_mode_3',
+          sensor_filter_timer: 'sensor.filter_timer_countdown_3',
+          sensor_humidity: 'sensor.humidity_3',
+          sensor_mode: 'sensor.mode_3',
+          sensor_rpm: 'sensor.rpm_3',
+          sensor_timer: 'sensor.timer_countdown_3',
+          button_party: 'button.party_mode_2',
+          button_reset_filter: 'button.reset_filter_alarm_2',
+          button_sleep: 'button.sleep_mode',
+          sensor_firmware: 'sensor.firmware_version_3',
+          sensor_version: 'sensor.version_3',
+        },
+        {
+          name: 'Спальня Пацанов',
+          fan_entity: 'fan.siku_blauberg_fan_192_168_1_50',
+          sensor_alarm: 'sensor.alarm_2',
+          sensor_boost_mode: 'sensor.boost_mode_2',
+          sensor_filter_timer: 'sensor.filter_timer_countdown_2',
+          sensor_humidity: 'sensor.humidity_2',
+          sensor_mode: 'sensor.mode_2',
+          sensor_rpm: 'sensor.rpm_2',
+          sensor_timer: 'sensor.timer_countdown_2',
+          button_party: 'button.party_mode_3',
+          button_reset_filter: 'button.reset_filter_alarm_3',
+          button_sleep: 'button.sleep_mode_5',
+          sensor_firmware: 'sensor.firmware_version_2',
+          sensor_version: 'sensor.version_2',
+        },
+      ],
       show_controls: true, compact: false,
     };
   }
@@ -117,9 +151,9 @@ class BlaubergRecuperatorCard extends HTMLElement {
     const d = this._config?.devices?.[this._activeTab];
     if (!d) { this._render(); return; }
     const changed = [d.fan_entity, d.sensor_alarm, d.sensor_boost_mode, d.sensor_filter_timer,
-      d.sensor_humidity, d.sensor_mode, d.sensor_rpm, d.sensor_timer,
-      d.sensor_firmware, d.sensor_version].some(e =>
-        e && prev.states[e] !== hass.states[e]);
+    d.sensor_humidity, d.sensor_mode, d.sensor_rpm, d.sensor_timer,
+    d.sensor_firmware, d.sensor_version].some(e =>
+      e && prev.states[e] !== hass.states[e]);
     if (changed) this._render();
   }
 

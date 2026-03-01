@@ -40,6 +40,10 @@ A premium **neumorphic** Home Assistant custom card for [Blauberg](https://blaub
    - **URL:** `/local/community/blauberg-recuperator-card/blauberg-recuperator-card.js`
    - **Type:** JavaScript Module
 
+## 🔗 Prerequisites
+
+This card requires the [Siku Integration](https://github.com/hmn/siku-integration) to be installed in your Home Assistant.
+
 ## 🚀 Usage
 
 ### Single Device
@@ -47,7 +51,7 @@ A premium **neumorphic** Home Assistant custom card for [Blauberg](https://blaub
 ```yaml
 type: custom:blauberg-recuperator-card
 devices:
-  - name: Рекуператор
+  - name: Спальня Амели
     fan_entity: fan.siku_blauberg_fan_192_168_1_41
     sensor_alarm: sensor.alarm
     sensor_boost_mode: sensor.boost_mode
@@ -56,41 +60,62 @@ devices:
     sensor_mode: sensor.mode
     sensor_rpm: sensor.rpm
     sensor_timer: sensor.timer_countdown
-    button_party: button.party_mode_2
-    button_reset_filter: button.reset_filter_alarm_2
+    button_party: button.party_mode
+    button_reset_filter: button.reset_filter_alarm
     button_sleep: button.sleep_mode_2
     sensor_firmware: sensor.firmware_version
     sensor_version: sensor.version
 ```
 
-### Multiple Devices (up to 5)
+### Multiple Devices
 
 ```yaml
 type: custom:blauberg-recuperator-card
 devices:
-  - name: Спальня
-    fan_entity: fan.recuperator_bedroom
-    sensor_alarm: sensor.alarm_bedroom
-    sensor_boost_mode: sensor.boost_bedroom
-    sensor_filter_timer: sensor.filter_timer_bedroom
-    sensor_humidity: sensor.humidity_bedroom
-    sensor_mode: sensor.mode_bedroom
-    sensor_rpm: sensor.rpm_bedroom
-    sensor_timer: sensor.timer_bedroom
-    button_party: button.party_bedroom
-    button_reset_filter: button.reset_filter_bedroom
-    button_sleep: button.sleep_bedroom
-    sensor_firmware: sensor.firmware_bedroom
-    sensor_version: sensor.version_bedroom
+  - name: Спальня Амели
+    fan_entity: fan.siku_blauberg_fan_192_168_1_41
+    sensor_alarm: sensor.alarm
+    sensor_boost_mode: sensor.boost_mode
+    sensor_filter_timer: sensor.filter_timer_countdown
+    sensor_humidity: sensor.humidity
+    sensor_mode: sensor.mode
+    sensor_rpm: sensor.rpm
+    sensor_timer: sensor.timer_countdown
+    button_party: button.party_mode
+    button_reset_filter: button.reset_filter_alarm
+    button_sleep: button.sleep_mode_2
+    sensor_firmware: sensor.firmware_version
+    sensor_version: sensor.version
 
-  - name: Гостиная
-    fan_entity: fan.recuperator_living
-    sensor_alarm: sensor.alarm_living
-    # ... (same fields)
+  - name: Мастер Спальня
+    fan_entity: fan.siku_blauberg_fan_192_168_1_49
+    sensor_alarm: sensor.alarm_3
+    sensor_boost_mode: sensor.boost_mode_3
+    sensor_filter_timer: sensor.filter_timer_countdown_3
+    sensor_humidity: sensor.humidity_3
+    sensor_mode: sensor.mode_3
+    sensor_rpm: sensor.rpm_3
+    sensor_timer: sensor.timer_countdown_3
+    button_party: button.party_mode_2
+    button_reset_filter: button.reset_filter_alarm_2
+    button_sleep: button.sleep_mode
+    sensor_firmware: sensor.firmware_version_3
+    sensor_version: sensor.version_3
 
-  - name: Кухня
-    fan_entity: fan.recuperator_kitchen
-    # ... (same fields)
+  - name: Спальня Пацанов
+    fan_entity: fan.siku_blauberg_fan_192_168_1_50
+    sensor_alarm: sensor.alarm_2
+    sensor_boost_mode: sensor.boost_mode_2
+    sensor_filter_timer: sensor.filter_timer_countdown_2
+    sensor_humidity: sensor.humidity_2
+    sensor_mode: sensor.mode_2
+    sensor_rpm: sensor.rpm_2
+    sensor_timer: sensor.timer_countdown_2
+    button_party: button.party_mode_3
+    button_reset_filter: button.reset_filter_alarm_3
+    button_sleep: button.sleep_mode_5
+    sensor_firmware: sensor.firmware_version_2
+    sensor_version: sensor.version_2
 ```
 
 ## ⚙️ Configuration Options
