@@ -374,6 +374,21 @@ class BlaubergRecuperatorCard extends HTMLElement {
     if (!s || s.state === "unavailable" || s.state === "unknown") return "—";
     return s.state;
   }
+  /** Parse filter timer: handles pure numbers (hours/days) and Russian strings like "82 д. 12 ч." */
+  _parseFilterDays(val) {
+    if (val === "—") return null;
+    const num = parseFloat(val);
+    if (!isNaN(num) && /^\d+(\.\d+)?$/.test(val.trim())) return num;
+    const dMatch = val.match(/(\d+)\s*д/);
+    const hMatch = val.match(/(\d+)\s*ч/);
+    if (dMatch || hMatch) {
+      const days = dMatch ? parseInt(dMatch[1], 10) : 0;
+      const hours = hMatch ? parseInt(hMatch[1], 10) : 0;
+      return days + hours / 24;
+    }
+    const parsed = parseInt(val, 10);
+    return isNaN(parsed) ? null : parsed;
+  }
   _isFanOn(d) {
     var _a, _b, _c;
     return ((_c = (_b = (_a = this._hass) == null ? void 0 : _a.states) == null ? void 0 : _b[d.fan_entity]) == null ? void 0 : _c.state) === "on";
@@ -779,10 +794,13 @@ class BlaubergRecuperatorCard extends HTMLElement {
     const timer = this._sv(d.sensor_timer);
     const firmware = this._sv(d.sensor_firmware);
     const version = this._sv(d.sensor_version);
-    const isAlarm = alarm !== "—" && alarm !== "0" && !["off", "none", "no alarm", "no_alarm"].includes(alarm.toLowerCase());
-    const isBoost = boost !== "—" && boost !== "0" && !["off", "inactive"].includes(boost.toLowerCase());
-    const filterNum = parseInt(filterTimer, 10);
-    const filterPct = isNaN(filterNum) ? 100 : Math.min(100, Math.max(0, filterNum / 720 * 100));
+    const alarmLow = alarm.toLowerCase();
+    const isAlarm = alarm !== "—" && alarm !== "0" && !["off", "none", "false", "ok", "no alarm", "no_alarm", "no", "нет"].includes(alarmLow);
+    const boostLow = boost.toLowerCase();
+    const isBoost = boost !== "—" && boost !== "0" && !["off", "false", "inactive", "нет"].includes(boostLow);
+    const filterDays = this._parseFilterDays(filterTimer);
+    const filterMaxDays = 90;
+    const filterPct = filterDays === null ? 100 : Math.min(100, Math.max(0, filterDays / filterMaxDays * 100));
     const filterCls = filterPct > 50 ? "ok" : filterPct > 20 ? "mid" : "low";
     const name = d.name || fanEntity.attributes.friendly_name || "Рекуператор";
     const modeLbl = this._sv(d.sensor_mode);
@@ -918,7 +936,7 @@ window.customCards.push({
   preview: true
 });
 console.info(
-  "%c BLAUBERG-RECUPERATOR-CARD %c v1.0.0 ",
+  "%c BLAUBERG-RECUPERATOR-CARD %c v2.0.0 ",
   "color: white; background: #3b82f6; font-weight: bold; border-radius: 4px 0 0 4px; padding: 2px 8px;",
   "color: #3b82f6; background: #e3e6ec; font-weight: bold; border-radius: 0 4px 4px 0; padding: 2px 8px;"
 );
