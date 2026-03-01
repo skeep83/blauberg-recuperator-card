@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+    server: {
+        open: '/preview.html',
+    },
     build: {
         lib: {
             entry: 'src/blauberg-recuperator-card.ts',

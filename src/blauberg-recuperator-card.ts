@@ -1,11 +1,39 @@
-/* ===================================================================
- *  Blauberg Recuperator — Neumorphic HA Custom Card
- *  A premium neumorphic card for Blauberg wall-mounted recuperators
- * =================================================================== */
+/**
+ * Blauberg Recuperator Card — Home Assistant Lovelace Custom Card
+ * Premium neumorphic card — matching Altal Heater Card design
+ * Multi-device support with tab switching
+ * v1.0.0
+ */
 
 import './blauberg-recuperator-card-editor';
 
-// ── HA type stubs ────────────────────────────────────────────────────
+/* ═══════════════════ Types ═══════════════════ */
+
+interface DeviceConfig {
+  name: string;
+  fan_entity: string;
+  sensor_alarm: string;
+  sensor_boost_mode: string;
+  sensor_filter_timer: string;
+  sensor_humidity: string;
+  sensor_mode: string;
+  sensor_rpm: string;
+  sensor_timer: string;
+  button_party: string;
+  button_reset_filter: string;
+  button_sleep: string;
+  sensor_firmware: string;
+  sensor_version: string;
+}
+
+interface CardConfig {
+  devices: DeviceConfig[];
+  show_controls?: boolean;
+  compact?: boolean;
+  text_color?: string;
+  animation_color?: string;
+}
+
 interface HassEntity {
   state: string;
   attributes: Record<string, any>;
@@ -13,996 +41,711 @@ interface HassEntity {
   last_changed?: string;
 }
 
-interface HomeAssistant {
+interface Hass {
   states: Record<string, HassEntity>;
-  themes?: {
-    darkMode: boolean;
-  };
-  callService(
-    domain: string,
-    service: string,
-    data?: Record<string, any>,
-  ): Promise<void>;
+  callService: (domain: string, service: string, data: Record<string, unknown>) => Promise<void>;
 }
 
-interface LovelaceCardConfig {
-  type: string;
-  [key: string]: any;
-}
+/* ═══════════════════ Card ═══════════════════ */
 
-// ── Default entity IDs ──────────────────────────────────────────────
-const DEFAULTS = {
-  fan_entity: 'fan.siku_blauberg_fan_192_168_1_41',
-  sensor_alarm: 'sensor.alarm',
-  sensor_boost_mode: 'sensor.boost_mode',
-  sensor_filter_timer: 'sensor.filter_timer_countdown',
-  sensor_humidity: 'sensor.humidity',
-  sensor_mode: 'sensor.mode',
-  sensor_rpm: 'sensor.rpm',
-  sensor_timer: 'sensor.timer_countdown',
-  button_party: 'button.party_mode_2',
-  button_reset_filter: 'button.reset_filter_alarm_2',
-  button_sleep: 'button.sleep_mode_2',
-  sensor_firmware: 'sensor.firmware_version',
-  sensor_version: 'sensor.version',
-  theme: 'auto', // 'auto', 'light', 'dark'
-};
-
-// ── CSS Styles ──────────────────────────────────────────────────────
-const CARD_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-  :host {
-    --neumo-bg: #E0E5EC;
-    --neumo-shadow-dark: #A3B1C6;
-    --neumo-shadow-light: #FFFFFF;
-    --neumo-shadow-dark-strong: #8C9BAF;
-    --neumo-accent: #4A90E2;
-    --neumo-accent-glow: rgba(74, 144, 226, 0.4);
-    --neumo-success: #43A047;
-    --neumo-warning: #FFB74D;
-    --neumo-danger: #E53935;
-    --neumo-text: #31344B;
-    --neumo-text-secondary: #8A98A8;
-    --neumo-radius: 12px;
-    --neumo-radius-sm: 8px;
-    --neumo-font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    --neumo-fan-active: #4A90E2;
-    --neumo-fan-idle: #9BA5B5;
-
-    display: block;
-    font-family: var(--neumo-font);
-  }
-
-  /* ── Card container ───────────────────────────────────────────── */
-  .card {
-    background: var(--neumo-bg);
-    border-radius: 14px;
-    padding: 10px;
-    box-shadow:
-      5px 5px 10px var(--neumo-shadow-dark),
-      -5px -5px 10px var(--neumo-shadow-light);
-    overflow: hidden;
-    position: relative;
-  }
-
-  /* ── Header ───────────────────────────────────────────────────── */
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-  }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .header-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 6px;
-    background: var(--neumo-bg);
-    box-shadow:
-      2px 2px 4px var(--neumo-shadow-dark),
-      -2px -2px 4px var(--neumo-shadow-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-  }
-
-  .header-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--neumo-text);
-    letter-spacing: -0.2px;
-  }
-
-  .header-subtitle {
-    font-size: 11px;
-    color: var(--neumo-text-secondary);
-    margin-top: 1px;
-    font-weight: 400;
-  }
-
-  .header-status {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.2px;
-    background: var(--neumo-bg);
-    box-shadow:
-      inset 1px 1px 3px var(--neumo-shadow-dark),
-      inset -1px -1px 3px var(--neumo-shadow-light);
-    transition: all 0.3s ease;
-  }
-
-  .header-status.active {
-    color: var(--neumo-success);
-  }
-
-  .header-status.inactive {
-    color: var(--neumo-text-secondary);
-  }
-
-  .status-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: currentColor;
-  }
-
-  .header-status.active .status-dot {
-    animation: pulse-dot 2s infinite;
-    box-shadow: 0 0 6px currentColor;
-  }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(0.8); }
-  }
-
-  /* ── Fan Hero ─────────────────────────────────────────────────── */
-  .fan-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 2px 0 8px;
-  }
-
-  .fan-container {
-    position: relative;
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: var(--neumo-bg);
-    box-shadow:
-      inset 3px 3px 6px var(--neumo-shadow-dark),
-      inset -3px -3px 6px var(--neumo-shadow-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .fan-container:hover {
-    transform: scale(1.02);
-  }
-
-  .fan-container:active {
-    transform: scale(0.98);
-  }
-
-  .fan-ring {
-    position: absolute;
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    transition: all 0.5s ease;
-  }
-
-  .fan-ring.active {
-    border-color: var(--neumo-accent);
-    box-shadow:
-      0 0 8px var(--neumo-accent-glow),
-      inset 0 0 8px var(--neumo-accent-glow);
-    animation: ring-pulse 3s infinite;
-  }
-
-  @keyframes ring-pulse {
-    0%, 100% { box-shadow: 0 0 6px var(--neumo-accent-glow), inset 0 0 6px var(--neumo-accent-glow); }
-    50% { box-shadow: 0 0 12px var(--neumo-accent-glow), inset 0 0 12px var(--neumo-accent-glow); }
-  }
-
-  .fan-svg {
-    width: 50px;
-    height: 50px;
-  }
-
-  .fan-rotor {
-    transform-origin: 50% 50%;
-  }
-
-  .fan-svg.spinning .fan-rotor {
-    animation: spin var(--spin-duration, 3s) linear infinite;
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  .fan-blade {
-    fill: url(#blade-grad-idle);
-    transition: fill 0.5s ease;
-  }
-
-  .fan-svg.spinning .fan-blade {
-    fill: url(#blade-grad);
-  }
-
-  .fan-center {
-    fill: var(--neumo-bg);
-    stroke: var(--neumo-fan-idle);
-    stroke-width: 2;
-    transition: all 0.5s ease;
-  }
-
-  .fan-svg.spinning .fan-center {
-    stroke: var(--neumo-fan-active);
-  }
-
-
-  .fan-label {
-    margin-top: 6px;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--neumo-text-secondary);
-    letter-spacing: 0.2px;
-  }
-
-  .fan-rpm {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--neumo-text);
-    margin-top: -2px;
-  }
-
-  .fan-rpm span {
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--neumo-text-secondary);
-    margin-left: 2px;
-  }
-
-  /* ── Speed Control ────────────────────────────────────────────── */
-  .speed-control {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin: 0 0 8px;
-  }
-
-  .speed-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: none;
-    background: var(--neumo-bg);
-    box-shadow:
-      2px 2px 5px var(--neumo-shadow-dark),
-      -2px -2px 5px var(--neumo-shadow-light);
-    color: var(--neumo-text);
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease;
-    font-family: var(--neumo-font);
-  }
-
-  .speed-btn:active {
-    box-shadow:
-      inset 1px 1px 3px var(--neumo-shadow-dark),
-      inset -1px -1px 3px var(--neumo-shadow-light);
-    transform: scale(0.95);
-  }
-
-  .speed-display {
-    min-width: 44px;
-    text-align: center;
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: var(--neumo-bg);
-    box-shadow:
-      inset 1px 1px 3px var(--neumo-shadow-dark),
-      inset -1px -1px 3px var(--neumo-shadow-light);
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--neumo-accent);
-  }
-
-  .speed-display small {
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--neumo-text-secondary);
-    margin-left: 1px;
-  }
-
-  /* ── Sensor Grid ──────────────────────────────────────────────── */
-  .section-label {
-    font-size: 9px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.2px;
-    color: var(--neumo-text-secondary);
-    margin-bottom: 4px;
-    padding-left: 2px;
-  }
-
-  .sensor-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-    margin-bottom: 10px;
-  }
-
-  .sensor-tile {
-    background: var(--neumo-bg);
-    border-radius: var(--neumo-radius-sm);
-    padding: 8px 6px;
-    box-shadow:
-      2px 2px 4px var(--neumo-shadow-dark),
-      -2px -2px 4px var(--neumo-shadow-light);
-    transition: all 0.2s ease;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .sensor-tile:hover {
-    transform: translateY(-1px);
-    box-shadow:
-      3px 3px 6px var(--neumo-shadow-dark),
-      -3px -3px 6px var(--neumo-shadow-light);
-  }
-
-  .sensor-tile.alarm-active {
-    box-shadow:
-      2px 2px 4px var(--neumo-shadow-dark),
-      -2px -2px 4px var(--neumo-shadow-light),
-      inset 0 0 0 1px var(--neumo-danger);
-    animation: alarm-glow 2s infinite;
-  }
-
-  @keyframes alarm-glow {
-    0%, 100% { box-shadow: 2px 2px 4px var(--neumo-shadow-dark), -2px -2px 4px var(--neumo-shadow-light), inset 0 0 0 1px var(--neumo-danger); }
-    50% { box-shadow: 2px 2px 4px var(--neumo-shadow-dark), -2px -2px 4px var(--neumo-shadow-light), inset 0 0 0 1px var(--neumo-danger), 0 0 6px rgba(229,57,53,0.3); }
-  }
-
-  .sensor-icon {
-    font-size: 14px;
-    margin-bottom: 2px;
-  }
-
-  .sensor-name {
-    font-size: 10px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.2px;
-    color: var(--neumo-text-secondary);
-    margin-bottom: 2px;
-  }
-
-  .sensor-value {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--neumo-text);
-    line-height: 1.1;
-  }
-
-  .sensor-value.small {
-    font-size: 12px;
-  }
-
-  .sensor-unit {
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--neumo-text-secondary);
-    margin-left: 1px;
-  }
-
-  .sensor-tile.wide {
-    grid-column: 1 / -1;
-  }
-
-  /* ── Filter progress bar ──────────────────────────────────────── */
-  .filter-progress {
-    width: 100%;
-    height: 3px;
-    border-radius: 2px;
-    background: var(--neumo-bg);
-    box-shadow:
-      inset 1px 1px 2px var(--neumo-shadow-dark),
-      inset -1px -1px 2px var(--neumo-shadow-light);
-    margin-top: 6px;
-    overflow: hidden;
-  }
-
-  .filter-progress-bar {
-    height: 100%;
-    border-radius: 2px;
-    background: linear-gradient(90deg, var(--neumo-success), var(--neumo-accent));
-    transition: width 1s ease;
-  }
-
-  /* ── Action Buttons ───────────────────────────────────────────── */
-  .actions {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-
-  .action-btn {
-    flex: 1;
-    padding: 8px 4px;
-    border-radius: var(--neumo-radius-sm);
-    border: none;
-    background: var(--neumo-bg);
-    box-shadow:
-      2px 2px 4px var(--neumo-shadow-dark),
-      -2px -2px 4px var(--neumo-shadow-light);
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    transition: all 0.15s ease;
-    font-family: var(--neumo-font);
-  }
-
-  .action-btn:active {
-    box-shadow:
-      inset 1px 1px 2px var(--neumo-shadow-dark),
-      inset -1px -1px 2px var(--neumo-shadow-light);
-    transform: scale(0.96);
-  }
-
-  .action-btn:hover {
-    transform: translateY(-1px);
-    box-shadow:
-      3px 3px 5px var(--neumo-shadow-dark),
-      -3px -3px 5px var(--neumo-shadow-light);
-  }
-
-  .action-icon {
-    font-size: 16px;
-  }
-
-  .action-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.1px;
-    color: var(--neumo-text-secondary);
-    text-align: center;
-  }
-
-  /* ── Info Footer ──────────────────────────────────────────────── */
-  .info-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border-radius: var(--neumo-radius-sm);
-    background: var(--neumo-bg);
-    box-shadow:
-      inset 2px 2px 4px var(--neumo-shadow-dark),
-      inset -2px -2px 4px var(--neumo-shadow-light);
-  }
-
-  .info-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-  }
-
-  .info-label {
-    font-size: 8px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-    color: var(--neumo-text-secondary);
-  }
-
-  .info-value {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--neumo-text);
-  }
-
-  .info-divider {
-    width: 1px;
-    height: 20px;
-    background: var(--neumo-shadow-dark);
-    opacity: 0.3;
-  }
-
-  /* ── Mode badge ───────────────────────────────────────────────── */
-  .mode-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    background: var(--neumo-bg);
-    box-shadow:
-      inset 2px 2px 4px var(--neumo-shadow-dark),
-      inset -2px -2px 4px var(--neumo-shadow-light);
-    color: var(--neumo-accent);
-  }
-
-  /* ── Unavailable overlay ──────────────────────────────────────── */
-  .unavailable {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 24px;
-    text-align: center;
-  }
-
-  .unavailable-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    opacity: 0.4;
-  }
-
-  .unavailable-text {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--neumo-text-secondary);
-  }
-
-  .unavailable-hint {
-    font-size: 12px;
-    color: var(--neumo-text-secondary);
-    opacity: 0.6;
-    margin-top: 4px;
-  }
-
-  /* ── Boost active indicator ───────────────────────────────────── */
-  .boost-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  .boost-indicator.active {
-    background: linear-gradient(135deg, #FFB74D22, #FF945022);
-    color: #FF9800;
-  }
-
-  .boost-indicator.inactive {
-    background: var(--neumo-bg);
-    box-shadow:
-      inset 1px 1px 3px var(--neumo-shadow-dark),
-      inset -1px -1px 3px var(--neumo-shadow-light);
-    color: var(--neumo-text-secondary);
-  }
-
-  /* ── Themes ─────────────────────────────────────────────────────── */
-  /* Default (Light) */
-  :host {
-    --neumo-bg: #E0E5EC;
-    --neumo-shadow-dark: #A3B1C6;
-    --neumo-shadow-light: #FFFFFF;
-    --neumo-shadow-dark-strong: #8C9BAF;
-    --neumo-text: #31344B;
-    --neumo-text-secondary: #8A98A8;
-    --neumo-fan-idle: #9BA5B5;
-    --neumo-fan-active: #4A90E2;
-    --neumo-accent: #4A90E2;
-    --neumo-accent-glow: rgba(74, 144, 226, 0.4);
-  }
-
-  /* Dark Theme Variables */
-  :host(.theme-dark) {
-    --neumo-bg: #2B2E33;
-    --neumo-shadow-dark: #1E2024;
-    --neumo-shadow-light: #383C42;
-    --neumo-shadow-dark-strong: #17181A;
-    --neumo-text: #E4E8F0;
-    --neumo-text-secondary: #8992A3;
-    --neumo-fan-idle: #5A6270;
-    --neumo-fan-active: #4A90E2;
-    --neumo-accent: #4A90E2;
-    --neumo-accent-glow: rgba(74, 144, 226, 0.3);
-  }
-`;
-
-// ── SVG Fan Blade ───────────────────────────────────────────────────
-const FAN_SVG = `
-<svg viewBox="0 0 120 120" class="fan-svg" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <!-- Blade Gradient for realism -->
-    <linearGradient id="blade-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="var(--neumo-fan-active)" stop-opacity="0.95"/>
-      <stop offset="100%" stop-color="var(--neumo-fan-active)" stop-opacity="0.6"/>
-    </linearGradient>
-    <linearGradient id="blade-grad-idle" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="var(--neumo-fan-idle)" stop-opacity="0.9"/>
-      <stop offset="100%" stop-color="var(--neumo-fan-idle)" stop-opacity="0.5"/>
-    </linearGradient>
-    <!-- Drop shadow for depth -->
-    <filter id="blade-shadow" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000" flood-opacity="0.15"/>
-    </filter>
-  </defs>
-
-  <!-- Outer vent casing ring -->
-  <circle cx="60" cy="60" r="54" fill="none" class="fan-casing" stroke="var(--neumo-shadow-dark)" stroke-width="2" opacity="0.5" />
-  
-  <g class="fan-rotor">
-    <!-- 4 perfectly centered symmetrical blades -->
-    <g class="fan-blades-group" filter="url(#blade-shadow)">
-      <path class="fan-blade" d="M60 60 C50 20, 80 20, 90 40 C100 60, 80 65, 60 60 Z" transform="rotate(0, 60, 60)" />
-      <path class="fan-blade" d="M60 60 C50 20, 80 20, 90 40 C100 60, 80 65, 60 60 Z" transform="rotate(90, 60, 60)" />
-      <path class="fan-blade" d="M60 60 C50 20, 80 20, 90 40 C100 60, 80 65, 60 60 Z" transform="rotate(180, 60, 60)" />
-      <path class="fan-blade" d="M60 60 C50 20, 80 20, 90 40 C100 60, 80 65, 60 60 Z" transform="rotate(270, 60, 60)" />
-    </g>
-
-    <!-- Center Hub Assembly -->
-    <circle class="fan-center-bg" cx="60" cy="60" r="12" fill="var(--neumo-shadow-dark)" />
-    <circle class="fan-center" cx="60" cy="60" r="10" />
-    <circle cx="60" cy="60" r="3" fill="var(--neumo-bg)" />
-  </g>
-</svg>
-`;
-
-// ── Card class ──────────────────────────────────────────────────────
 class BlaubergRecuperatorCard extends HTMLElement {
-  private _hass!: HomeAssistant;
-  private _config!: LovelaceCardConfig;
+  private _config!: CardConfig;
+  private _hass!: Hass;
   private _root!: ShadowRoot;
-  private _rendered = false;
+  private _activeTab = 0;
 
-  /* HA calls this first */
-  setConfig(config: LovelaceCardConfig): void {
-    this._config = {
-      title: 'Blauberg Recuperator',
-      ...config,
+  constructor() {
+    super();
+    this._root = this.attachShadow({ mode: 'open' });
+  }
+
+  static getConfigElement() { return document.createElement('blauberg-recuperator-card-editor'); }
+
+  static getStubConfig() {
+    return {
+      devices: [{
+        name: 'Рекуператор',
+        fan_entity: 'fan.siku_blauberg_fan_192_168_1_41',
+        sensor_alarm: 'sensor.alarm',
+        sensor_boost_mode: 'sensor.boost_mode',
+        sensor_filter_timer: 'sensor.filter_timer_countdown',
+        sensor_humidity: 'sensor.humidity',
+        sensor_mode: 'sensor.mode',
+        sensor_rpm: 'sensor.rpm',
+        sensor_timer: 'sensor.timer_countdown',
+        button_party: 'button.party_mode_2',
+        button_reset_filter: 'button.reset_filter_alarm_2',
+        button_sleep: 'button.sleep_mode_2',
+        sensor_firmware: 'sensor.firmware_version',
+        sensor_version: 'sensor.version',
+      }],
+      show_controls: true, compact: false,
     };
-
-    if (!this._root) {
-      this._root = this.attachShadow({ mode: 'open' });
-    }
   }
 
-  /* HA calls this when state changes */
-  set hass(hass: HomeAssistant) {
+  setConfig(config: CardConfig) {
+    // Support legacy single-device config
+    if (!(config as any).devices && (config as any).fan_entity) {
+      (config as any).devices = [{
+        name: (config as any).title || 'Рекуператор',
+        fan_entity: (config as any).fan_entity,
+        sensor_alarm: (config as any).sensor_alarm || '',
+        sensor_boost_mode: (config as any).sensor_boost_mode || '',
+        sensor_filter_timer: (config as any).sensor_filter_timer || '',
+        sensor_humidity: (config as any).sensor_humidity || '',
+        sensor_mode: (config as any).sensor_mode || '',
+        sensor_rpm: (config as any).sensor_rpm || '',
+        sensor_timer: (config as any).sensor_timer || '',
+        button_party: (config as any).button_party || '',
+        button_reset_filter: (config as any).button_reset_filter || '',
+        button_sleep: (config as any).button_sleep || '',
+        sensor_firmware: (config as any).sensor_firmware || '',
+        sensor_version: (config as any).sensor_version || '',
+      }];
+    }
+    if (!config.devices || config.devices.length === 0) throw new Error('Укажите хотя бы одно устройство в devices');
+    this._config = { show_controls: true, compact: false, ...config };
+    if (this._activeTab >= this._config.devices.length) this._activeTab = 0;
+    if (this._hass) this._render();
+  }
+
+  set hass(hass: Hass) {
+    const prev = this._hass;
     this._hass = hass;
-    this._render();
+    // Only rerender if something changed
+    if (!prev) { this._render(); return; }
+    const d = this._config?.devices?.[this._activeTab];
+    if (!d) { this._render(); return; }
+    const changed = [d.fan_entity, d.sensor_alarm, d.sensor_boost_mode, d.sensor_filter_timer,
+      d.sensor_humidity, d.sensor_mode, d.sensor_rpm, d.sensor_timer,
+      d.sensor_firmware, d.sensor_version].some(e =>
+        e && prev.states[e] !== hass.states[e]);
+    if (changed) this._render();
   }
 
-  /* Helpers */
-  private _e(id: string): string {
-    return (this._config as any)[id] ?? (DEFAULTS as any)[id] ?? '';
+  getCardSize() { return this._config?.compact ? 5 : 8; }
+
+  /* ── Helpers ───────────────────────────── */
+
+  private _sv(entity: string): string {
+    if (!entity) return '—';
+    const s = this._hass?.states?.[entity];
+    if (!s || s.state === 'unavailable' || s.state === 'unknown') return '—';
+    return s.state;
   }
 
-  private _state(configKey: string): HassEntity | undefined {
-    const entityId = this._e(configKey);
-    return entityId ? this._hass.states[entityId] : undefined;
+  private _isFanOn(d: DeviceConfig): boolean {
+    return this._hass?.states?.[d.fan_entity]?.state === 'on';
   }
 
-  private _stateVal(configKey: string, fallback: string = '—'): string {
-    const entity = this._state(configKey);
-    if (!entity) return fallback;
-    return entity.state === 'unavailable' || entity.state === 'unknown'
-      ? fallback
-      : entity.state;
+  private _fanPct(d: DeviceConfig): number {
+    const fan = this._hass?.states?.[d.fan_entity];
+    return fan?.state === 'on' ? (fan.attributes.percentage ?? 0) : 0;
   }
 
-  private _isFanOn(): boolean {
-    const fan = this._state('fan_entity');
-    return fan?.state === 'on';
-  }
-
-  private _fanSpeedPct(): number {
-    const fan = this._state('fan_entity');
-    if (!fan || fan.state !== 'on') return 0;
-    return fan.attributes.percentage ?? 0;
-  }
-
-  private _getSpinDuration(): string {
-    const rpm = parseInt(this._stateVal('sensor_rpm', '0'), 10);
+  private _spinDuration(d: DeviceConfig): string {
+    const rpm = parseInt(this._sv(d.sensor_rpm), 10);
     if (!rpm || rpm <= 0) return '4s';
-    // Map RPM to animation speed: higher RPM = faster spin
-    const duration = Math.max(0.3, 60 / rpm);
-    return `${Math.min(duration, 4).toFixed(2)}s`;
+    return `${Math.max(0.3, Math.min(4, 60 / rpm)).toFixed(2)}s`;
   }
 
-  /* ── Toggle fan ────────────────────────────────────────────────── */
-  private async _toggleFan(): Promise<void> {
-    const entityId = this._e('fan_entity');
-    if (!entityId) return;
-    await this._hass.callService('fan', 'toggle', {
-      entity_id: entityId,
-    });
+  /* ── Actions ────────────────────────────── */
+
+  private async _toggleFan(d: DeviceConfig) {
+    if (!d.fan_entity) return;
+    await this._hass.callService('fan', 'toggle', { entity_id: d.fan_entity });
   }
 
-  /* ── Set speed ─────────────────────────────────────────────────── */
-  private async _setSpeed(delta: number): Promise<void> {
-    const entityId = this._e('fan_entity');
-    const fan = this._state('fan_entity');
-    if (!entityId || !fan) return;
-
-    const current = fan.attributes.percentage ?? 0;
+  private async _setSpeed(d: DeviceConfig, dir: number) {
+    const fan = this._hass?.states?.[d.fan_entity];
+    if (!fan) return;
     const step = fan.attributes.percentage_step ?? 25;
-    const newSpeed = Math.max(0, Math.min(100, current + delta * step));
-
-    if (newSpeed === 0) {
-      await this._hass.callService('fan', 'turn_off', { entity_id: entityId });
+    const cur = fan.attributes.percentage ?? 0;
+    const next = Math.max(0, Math.min(100, cur + dir * step));
+    if (next === 0) {
+      await this._hass.callService('fan', 'turn_off', { entity_id: d.fan_entity });
     } else {
-      await this._hass.callService('fan', 'set_percentage', {
-        entity_id: entityId,
-        percentage: newSpeed,
-      });
+      await this._hass.callService('fan', 'set_percentage', { entity_id: d.fan_entity, percentage: next });
     }
   }
 
-  /* ── Press button ──────────────────────────────────────────────── */
-  private async _pressButton(configKey: string): Promise<void> {
-    const entityId = this._e(configKey);
-    if (!entityId) return;
-    await this._hass.callService('button', 'press', {
-      entity_id: entityId,
-    });
+  private async _press(entity: string) {
+    if (!entity) return;
+    await this._hass.callService('button', 'press', { entity_id: entity });
   }
 
-  /* ── Render ────────────────────────────────────────────────────── */
-  private _render(): void {
-    if (!this._hass || !this._config) return;
+  /* ── SVG Icons (Altal thin-stroke style) ── */
+  private _ico = {
+    fan: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 9C12 5.5 9.5 2 12 2s0 3.5 0 7"/><path d="M12 9C12 5.5 14.5 2 12 2"/><path d="M15 12c3.5 0 7-2.5 7 0s-3.5 0-7 0"/><path d="M15 12c3.5 0 7 2.5 7 0"/><path d="M12 15c0 3.5 2.5 7 0 7s0-3.5 0-7"/><path d="M12 15c0 3.5-2.5 7 0 7"/><path d="M9 12c-3.5 0-7 2.5-7 0s3.5 0 7 0"/><path d="M9 12c-3.5 0-7-2.5-7 0"/></svg>`,
+    power: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v8"/><path d="M17.66 6.34a8 8 0 11-11.32 0"/></svg>`,
+    minus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="7" y1="12" x2="17" y2="12"/></svg>`,
+    plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="7" x2="12" y2="17"/><line x1="7" y1="12" x2="17" y2="12"/></svg>`,
+    humidity: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg>`,
+    mode: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>`,
+    bolt: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+    alarm: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    filter: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>`,
+    timer: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    party: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5.8 11.3L2 22l10.7-3.79"/><path d="M4 3h.01"/><path d="M22 8h.01"/><path d="M15 2h.01"/><path d="M22 20h.01"/><path d="M22 2l-2.24.75a2.9 2.9 0 00-1.96 3.12l.2 1.3a2.9 2.9 0 01-.76 2.46L14 13l-3-3 3.24-3.24a2.9 2.9 0 012.46-.77l1.3.2a2.9 2.9 0 003.12-1.96z"/></svg>`,
+    sleep: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`,
+    reset: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>`,
+    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+  };
 
-    const fanEntity = this._state('fan_entity');
-    const isFanOn = this._isFanOn();
-    const speedPct = this._fanSpeedPct();
-    const spinDuration = this._getSpinDuration();
+  /* ── Fan SVG blades ── */
+  private _fanSvg = `
+    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" class="fan-blades">
+      <path class="blade" d="M50 50 C48 40, 44 22, 50 10 C56 22, 52 40, 50 50Z"/>
+      <path class="blade" d="M50 50 C48 40, 44 22, 50 10 C56 22, 52 40, 50 50Z" transform="rotate(60, 50, 50)"/>
+      <path class="blade" d="M50 50 C48 40, 44 22, 50 10 C56 22, 52 40, 50 50Z" transform="rotate(120, 50, 50)"/>
+      <path class="blade" d="M50 50 C48 40, 44 22, 50 10 C56 22, 52 40, 50 50Z" transform="rotate(180, 50, 50)"/>
+      <path class="blade" d="M50 50 C48 40, 44 22, 50 10 C56 22, 52 40, 50 50Z" transform="rotate(240, 50, 50)"/>
+      <path class="blade" d="M50 50 C48 40, 44 22, 50 10 C56 22, 52 40, 50 50Z" transform="rotate(300, 50, 50)"/>
+      <circle cx="50" cy="50" r="7" class="hub"/>
+    </svg>
+  `;
 
-    const alarm = this._stateVal('sensor_alarm');
-    const boostMode = this._stateVal('sensor_boost_mode');
-    const filterTimer = this._stateVal('sensor_filter_timer');
-    const humidity = this._stateVal('sensor_humidity');
-    const mode = this._stateVal('sensor_mode');
-    const rpm = this._stateVal('sensor_rpm');
-    const timer = this._stateVal('sensor_timer');
-    const firmware = this._stateVal('sensor_firmware');
-    const version = this._stateVal('sensor_version');
+  /* ══════════════════ CSS ══════════════════ */
 
-    const isAlarmActive =
-      alarm !== '—' &&
-      alarm !== '0' &&
-      alarm.toLowerCase() !== 'off' &&
-      alarm.toLowerCase() !== 'none' &&
-      alarm.toLowerCase() !== 'no alarm';
+  private _css(): string {
+    const customText = this._config?.text_color || 'var(--aerogel-text, var(--primary-text-color, #3b3f5c))';
+    const customHeat = this._config?.animation_color || 'var(--aerogel-warning, #3b82f6)';
 
-    const isBoostActive =
-      boostMode !== '—' &&
-      boostMode !== '0' &&
-      boostMode.toLowerCase() !== 'off' &&
-      boostMode.toLowerCase() !== 'inactive';
+    return `
+      @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&display=swap');
 
-    // Apply theme class to host element
-    const theme = this._config.theme || 'auto';
-    let isDark = false;
+      :host {
+        --bg: var(--aerogel-base, var(--card-background-color, #e3e6ec));
+        --bg2: var(--aerogel-base-alt, var(--secondary-background-color, #d1d5db));
+        --txt: ${customText};
+        --txt2: var(--aerogel-text-secondary, var(--secondary-text-color, #8b8fa3));
+        --accent: var(--aerogel-accent, var(--primary-color, #6CB4EE));
 
-    if (theme === 'dark') {
-      isDark = true;
-    } else if (theme === 'light') {
-      isDark = false;
-    } else {
-      // auto
-      isDark = this._hass.themes?.darkMode === true;
+        --raised: var(--aerogel-convex-lg, 6px 6px 14px rgba(166,180,200,0.7), -6px -6px 14px rgba(255,255,255,0.8));
+        --raised-s: var(--aerogel-convex-sm, 3px 3px 8px rgba(166,180,200,0.7), -3px -3px 8px rgba(255,255,255,0.8));
+        --inset: var(--aerogel-concave-lg, inset 3px 3px 7px rgba(166,180,200,0.7), inset -3px -3px 7px rgba(255,255,255,0.8));
+        --inset-s: var(--aerogel-concave-sm, inset 2px 2px 4px rgba(166,180,200,0.7), inset -2px -2px 4px rgba(255,255,255,0.8));
+        --btn: var(--aerogel-flat, 4px 4px 10px rgba(166,180,200,0.7), -4px -4px 10px rgba(255,255,255,0.8));
+        --btn-p: var(--aerogel-active, inset 3px 3px 7px rgba(166,180,200,0.7), inset -3px -3px 7px rgba(255,255,255,0.8));
+
+        --heat: ${customHeat};
+        --heat-g: rgba(59, 130, 246, 0.15);
+        --idle: var(--aerogel-text-secondary, #93a5be);
+        --good: var(--success-color, #05a677);
+        --warn: var(--aerogel-warning, #e5a100);
+        --danger: #e53935;
+
+        display: block; width: 100%; box-sizing: border-box;
+        position: relative; z-index: 0; isolation: isolate;
+        font-family: var(--aerogel-font, 'Nunito', sans-serif);
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      /* ─── Card ─── */
+      .card {
+        background: var(--bg);
+        border-radius: 24px;
+        box-shadow: var(--raised);
+        overflow: hidden;
+        font-family: 'Nunito', 'Segoe UI', Roboto, sans-serif;
+        color: var(--txt);
+        padding: clamp(16px, 5cqw, 24px);
+        container-type: inline-size;
+      }
+
+      /* ─── Device Tabs ─── */
+      .tabs {
+        display: flex; gap: 8px; margin-bottom: clamp(14px, 4cqw, 20px);
+        overflow-x: auto; scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .tabs::-webkit-scrollbar { display: none; }
+
+      .tab {
+        padding: 8px 18px; border-radius: 14px; border: none;
+        background: var(--bg); box-shadow: var(--raised-s);
+        cursor: pointer; font-family: inherit;
+        font-size: clamp(11px, 3cqw, 13px); font-weight: 600;
+        color: var(--txt2); white-space: nowrap;
+        transition: all 0.25s; -webkit-tap-highlight-color: transparent;
+        flex-shrink: 0;
+      }
+      .tab:hover { transform: translateY(-1px); }
+      .tab:active { box-shadow: var(--btn-p); transform: scale(0.96); }
+      .tab.on { box-shadow: var(--btn-p); color: var(--heat); font-weight: 700; }
+
+      /* ─── Top ─── */
+      .top {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: clamp(16px, 5cqw, 24px);
+      }
+      .top-left { display: flex; align-items: center; gap: clamp(12px, 3cqw, 16px); }
+
+      .dev-thumb {
+        width: clamp(50px, 13cqw, 64px); aspect-ratio: 1;
+        border-radius: 18px;
+        background: var(--bg); box-shadow: var(--raised-s);
+        overflow: hidden; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--txt2); transition: transform 0.3s;
+      }
+      .dev-thumb:hover { transform: scale(1.04); }
+      .dev-thumb svg { width: clamp(28px, 7cqw, 36px); height: clamp(28px, 7cqw, 36px); }
+
+      .top-info .name {
+        font-size: clamp(16px, 4cqw, 20px); font-weight: 600;
+        color: var(--txt); line-height: 1.3;
+      }
+      .top-info .status {
+        font-size: clamp(11px, 2.8cqw, 13px); font-weight: 400;
+        color: var(--txt2); margin-top: 4px;
+      }
+
+      .top-right {
+        display: flex; flex-direction: column;
+        align-items: flex-end; gap: clamp(6px, 2cqw, 10px);
+      }
+
+      /* Badge */
+      .badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 5px 14px; border-radius: 20px;
+        font-size: clamp(9px, 2cqw, 11px); font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+      .badge .dot { width: 7px; height: 7px; border-radius: 50%; }
+      .badge.on { background: rgba(59,130,246,0.1); color: var(--heat); }
+      .badge.on .dot { background: var(--heat); box-shadow: 0 0 6px var(--heat); animation: blink 1.4s ease-in-out infinite; }
+      .badge.off { background: rgba(100,100,120,0.08); color: #999; }
+      .badge.off .dot { background: #aaa; }
+      @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.3;transform:scale(1.5)} }
+
+      /* Power */
+      .pwr {
+        width: clamp(36px, 9cqw, 44px); aspect-ratio: 1; border-radius: 14px; border: none;
+        background: var(--bg); box-shadow: var(--btn);
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        color: var(--idle); transition: all 0.25s;
+      }
+      .pwr:hover { box-shadow: var(--raised); }
+      .pwr:active { box-shadow: var(--btn-p); }
+      .pwr.on { color: var(--heat); }
+      .pwr svg { width: clamp(18px, 4.5cqw, 22px); height: clamp(18px, 4.5cqw, 22px); }
+
+      /* ─── Fan dial area ─── */
+      .dial-area {
+        display: flex; align-items: center; justify-content: center;
+        gap: clamp(12px, 4cqw, 20px); margin-bottom: 12px;
+      }
+
+      .side-btn {
+        width: clamp(40px, 10cqw, 56px); aspect-ratio: 1; border-radius: 16px; border: none;
+        background: var(--bg); box-shadow: var(--btn);
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        color: var(--txt); flex-shrink: 0;
+        transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+      }
+      .side-btn:hover { transform: scale(1.06); box-shadow: var(--raised); }
+      .side-btn:active { box-shadow: var(--btn-p); transform: scale(0.94); }
+      .side-btn svg { width: clamp(20px, 5cqw, 24px); }
+
+      /* Circle (fan housing) */
+      .circle {
+        width: clamp(140px, 40cqw, 220px); aspect-ratio: 1;
+        border-radius: 50%; flex-shrink: 0;
+        background: var(--bg); box-shadow: var(--raised);
+        display: flex; align-items: center; justify-content: center;
+        position: relative; cursor: pointer;
+      }
+      .circle:hover { transform: scale(1.02); }
+      .circle:active { transform: scale(0.98); }
+      .circle-in {
+        width: 85%; aspect-ratio: 1;
+        border-radius: 50%;
+        background: var(--bg); box-shadow: var(--inset);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        position: relative; z-index: 2; overflow: hidden;
+      }
+
+      /* Glow + spin ring */
+      .glow {
+        position: absolute; inset: 0; border-radius: 50%;
+        pointer-events: none; opacity: 0; transition: opacity 0.5s;
+      }
+      .glow.on { background: radial-gradient(circle, var(--heat-g) 0%, transparent 60%); opacity: 1; animation: gp 2.5s ease-in-out infinite; }
+      @keyframes gp { 0%,100%{opacity:.4;transform:scale(.97)} 50%{opacity:1;transform:scale(1.03)} }
+
+      .spin-ring {
+        position: absolute; inset: -3px; border-radius: 50%;
+        pointer-events: none; opacity: 0; transition: opacity 0.4s;
+      }
+      .spin-ring.on {
+        opacity: 1;
+        border: 2.5px solid transparent;
+        border-top-color: var(--heat);
+        border-right-color: rgba(59,130,246,0.3);
+        animation: sp 3s linear infinite;
+        filter: drop-shadow(0 0 3px var(--heat-g));
+      }
+      @keyframes sp { to { transform:rotate(360deg); } }
+
+      /* Fan blades SVG */
+      .fan-blades {
+        width: clamp(60px, 20cqw, 100px);
+        position: relative; z-index: 3;
+        transition: all 0.5s;
+      }
+      .fan-blades.spinning {
+        animation: fan-spin var(--spin-dur, 3s) linear infinite;
+      }
+      .blade {
+        fill: var(--idle);
+        transition: fill 0.5s;
+      }
+      .fan-blades.spinning .blade { fill: var(--heat); }
+      .hub {
+        fill: var(--bg);
+        stroke: var(--idle);
+        stroke-width: 1.5;
+        transition: all 0.5s;
+      }
+      .fan-blades.spinning .hub { stroke: var(--heat); }
+      @keyframes fan-spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+      /* ─── Speed display below dial ─── */
+      .setpoint {
+        text-align: center; margin-bottom: clamp(16px, 5cqw, 22px);
+      }
+      .sp-lbl {
+        font-size: clamp(9px, 2.5cqw, 11px); font-weight: 500; text-transform: uppercase;
+        letter-spacing: 1.5px; color: var(--txt2);
+      }
+      .sp-val {
+        font-size: clamp(24px, 7cqw, 36px); font-weight: 600; color: var(--txt);
+        line-height: 1.3; transition: color 0.3s;
+      }
+      .sp-val.on { color: var(--heat); }
+      .sp-unit {
+        font-size: clamp(14px, 4cqw, 20px); font-weight: 400;
+      }
+      .rpm-sub {
+        font-size: clamp(11px, 3cqw, 13px); font-weight: 500;
+        color: var(--txt2); margin-top: 2px;
+      }
+
+      /* ─── Sensor metrics (Altal grid) ─── */
+      .metrics {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: clamp(10px, 3cqw, 14px); margin-bottom: 18px;
+        width: 100%;
+      }
+      .metric {
+        background: var(--bg);
+        box-shadow: var(--raised-s);
+        border-radius: 18px; padding: clamp(12px, 3cqw, 16px);
+        display: flex; align-items: center; gap: clamp(8px, 2.5cqw, 12px);
+        transition: all 0.25s;
+        animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+      }
+      .metric:nth-child(1){animation-delay:.1s}
+      .metric:nth-child(2){animation-delay:.15s}
+      .metric:nth-child(3){animation-delay:.2s}
+      .metric:nth-child(4){animation-delay:.25s}
+      .metric:nth-child(5){animation-delay:.3s}
+      .metric:nth-child(6){animation-delay:.35s}
+      @keyframes pop { 0%{opacity:0;transform:scale(.85)} 100%{opacity:1;transform:none} }
+      .metric:hover { transform: translateY(-2px); box-shadow: var(--raised); }
+      .metric:active { box-shadow: var(--inset-s); transform: none; }
+
+      .metric.wide { grid-column: 1 / -1; }
+      .metric.alarm-active {
+        box-shadow: var(--raised-s), inset 0 0 0 2px var(--danger);
+      }
+
+      .m-ico {
+        width: 44px; height: 44px; border-radius: 14px;
+        background: var(--bg); box-shadow: var(--inset-s);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; color: var(--txt2); transition: color 0.3s;
+      }
+      .m-ico svg { width: 22px; height: 22px; }
+      .m-ico.active { color: var(--heat); }
+      .m-ico.ok { color: var(--good); }
+      .m-ico.warn { color: var(--warn); }
+      .m-ico.danger { color: var(--danger); }
+
+      .m-txt { min-width: 0; }
+      .m-val { font-size: clamp(15px, 4.5cqw, 20px); font-weight: 600; color: var(--txt); line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .m-val.active { color: var(--heat); }
+      .m-lbl { font-size: 12px; font-weight: 500; color: var(--txt2); margin-top: 2px; }
+
+      /* Filter progress bar */
+      .dt-bar {
+        height: 4px; border-radius: 4px; margin-top: 6px;
+        background: var(--bg); box-shadow: var(--inset-s);
+        overflow: hidden; width: 100%;
+      }
+      .dt-fill {
+        height: 100%; border-radius: 4px;
+        transition: width 0.8s ease;
+      }
+      .dt-fill.ok { background: var(--good); }
+      .dt-fill.mid { background: var(--warn); }
+      .dt-fill.low { background: var(--danger); }
+
+      /* ─── Action buttons ─── */
+      .actions {
+        display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+        margin-bottom: 18px;
+        animation: pop 0.4s 0.4s both;
+      }
+      .abtn {
+        padding: 12px 8px; border-radius: 16px; border: none;
+        background: var(--bg); box-shadow: var(--raised-s);
+        cursor: pointer; font-family: inherit;
+        font-size: clamp(9px, 2.5cqw, 11px); font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.3px;
+        color: var(--txt2); display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 6px;
+        transition: all 0.2s; -webkit-tap-highlight-color: transparent;
+      }
+      .abtn:hover { transform: translateY(-2px); }
+      .abtn:active { box-shadow: var(--btn-p); transform: scale(0.95); }
+      .abtn svg { width: 20px; height: 20px; }
+
+      /* ─── Info footer ─── */
+      .info {
+        display: flex; align-items: center; justify-content: center;
+        gap: 20px; padding: 10px 16px;
+        border-radius: 14px; background: var(--bg); box-shadow: var(--inset-s);
+        animation: pop 0.4s 0.45s both;
+      }
+      .info-item {
+        display: flex; flex-direction: column; align-items: center; gap: 1px;
+      }
+      .info-lbl {
+        font-size: 9px; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.5px;
+        color: var(--txt2);
+      }
+      .info-val {
+        font-size: 12px; font-weight: 600; color: var(--txt);
+      }
+      .info-sep {
+        width: 1px; height: 24px; background: rgba(139,143,163,0.2);
+      }
+
+      /* ─── Error ─── */
+      .err {
+        padding: 40px; text-align: center; border-radius: 24px;
+        background: var(--bg); box-shadow: var(--raised);
+      }
+      .err h3 { font-size: 18px; font-weight: 600; color: var(--danger); margin-bottom: 8px; }
+      .err p { font-size: 14px; color: var(--txt2); }
+    `;
+  }
+
+  /* ══════════════════ RENDER ══════════════════ */
+
+  private _render() {
+    if (!this._config || !this._hass) {
+      this._root.innerHTML = `<style>${this._css()}</style><div class="card" style="text-align:center;padding:40px;color:var(--txt2)">Загрузка…</div>`;
+      return;
     }
 
-    if (isDark) {
-      this.classList.add('theme-dark');
-      this.classList.remove('theme-light');
-    } else {
-      this.classList.add('theme-light');
-      this.classList.remove('theme-dark');
+    const devices = this._config.devices;
+    const d = devices[this._activeTab];
+    if (!d) {
+      this._root.innerHTML = `<style>${this._css()}</style><div class="err"><h3>Нет устройств</h3><p>Добавьте хотя бы одно устройство в конфигурации</p></div>`;
+      return;
     }
+
+    const fanEntity = this._hass.states[d.fan_entity];
+    if (!fanEntity) {
+      this._root.innerHTML = `<style>${this._css()}</style><div class="err"><h3>Entity не найден</h3><p>${d.fan_entity}</p></div>`;
+      return;
+    }
+
+    const isOn = this._isFanOn(d);
+    const pct = this._fanPct(d);
+    const spinDur = this._spinDuration(d);
+    const rpm = this._sv(d.sensor_rpm);
+    const humidity = this._sv(d.sensor_humidity);
+    const mode = this._sv(d.sensor_mode);
+    const boost = this._sv(d.sensor_boost_mode);
+    const alarm = this._sv(d.sensor_alarm);
+    const filterTimer = this._sv(d.sensor_filter_timer);
+    const timer = this._sv(d.sensor_timer);
+    const firmware = this._sv(d.sensor_firmware);
+    const version = this._sv(d.sensor_version);
+
+    const isAlarm = alarm !== '—' && alarm !== '0' &&
+      !['off', 'none', 'no alarm', 'no_alarm'].includes(alarm.toLowerCase());
+    const isBoost = boost !== '—' && boost !== '0' &&
+      !['off', 'inactive'].includes(boost.toLowerCase());
+
+    // Filter progress (assume max ~720h)
+    const filterNum = parseInt(filterTimer, 10);
+    const filterPct = isNaN(filterNum) ? 100 : Math.min(100, Math.max(0, (filterNum / 720) * 100));
+    const filterCls = filterPct > 50 ? 'ok' : filterPct > 20 ? 'mid' : 'low';
+
+    const name = d.name || fanEntity.attributes.friendly_name || 'Рекуператор';
+    const modeLbl = this._sv(d.sensor_mode);
+
+    // Tabs HTML
+    const tabsHtml = devices.length > 1 ? `
+      <div class="tabs">
+        ${devices.map((dev, i) => `
+          <button class="tab ${i === this._activeTab ? 'on' : ''}" data-tab="${i}">
+            ${dev.name || `Рекуператор ${i + 1}`}
+          </button>
+        `).join('')}
+      </div>
+    ` : '';
 
     this._root.innerHTML = `
-      <style>${CARD_STYLES}</style>
+      <style>${this._css()}</style>
       <ha-card>
         <div class="card">
-          <!-- Header -->
-          <div class="header">
-            <div class="header-left">
-              <div class="header-icon">🌀</div>
-              <div>
-                <div class="header-title">${this._config.title || 'Blauberg Recuperator'}</div>
-                <div class="header-subtitle">${this._config.subtitle || '192.168.1.41'}</div>
+
+          ${tabsHtml}
+
+          <!-- TOP -->
+          <div class="top">
+            <div class="top-left">
+              <div class="dev-thumb">${this._ico.fan}</div>
+              <div class="top-info">
+                <div class="name">${name}</div>
+                <div class="status">Рекуператор · ${isOn ? (modeLbl !== '—' ? modeLbl : 'Работает') : 'Выкл'}</div>
               </div>
             </div>
-            <div class="header-status ${isFanOn ? 'active' : 'inactive'}">
-              <div class="status-dot"></div>
-              ${isFanOn ? 'Работает' : 'Выкл'}
+            <div class="top-right">
+              <div class="badge ${isOn ? 'on' : 'off'}"><span class="dot"></span>${isOn ? 'Работает' : 'Выкл'}</div>
+              <button class="pwr ${isOn ? 'on' : ''}" id="pwr">${this._ico.power}</button>
             </div>
           </div>
 
-          <!-- Fan Hero -->
-          <div class="fan-section">
-            <div class="fan-container" id="fan-toggle">
-              <div class="fan-ring ${isFanOn ? 'active' : ''}"></div>
-              <div style="--spin-duration: ${spinDuration}">
-                ${FAN_SVG.replace(
-      'class="fan-svg"',
-      `class="fan-svg ${isFanOn ? 'spinning' : ''}" style="--spin-duration: ${spinDuration}"`,
-    )}
+          <!-- FAN DIAL: [-] [circle] [+] -->
+          ${this._config.show_controls !== false ? `
+          <div class="dial-area">
+            <button class="side-btn" id="dn">${this._ico.minus}</button>
+            <div class="circle" id="fan-toggle">
+              <div class="spin-ring ${isOn ? 'on' : ''}"></div>
+              <div class="circle-in">
+                <div class="glow ${isOn ? 'on' : ''}"></div>
+                ${this._fanSvg.replace('class="fan-blades"', `class="fan-blades ${isOn ? 'spinning' : ''}" style="--spin-dur:${spinDur}"`)}
               </div>
             </div>
-            <div class="fan-label">ОБОРОТЫ</div>
-            <div class="fan-rpm">${rpm}<span> RPM</span></div>
+            <button class="side-btn" id="up">${this._ico.plus}</button>
           </div>
 
-          <!-- Speed Control -->
-          <div class="speed-control">
-            <button class="speed-btn" id="speed-down">−</button>
-            <div class="speed-display">${speedPct}<small>%</small></div>
-            <button class="speed-btn" id="speed-up">+</button>
+          <!-- SPEED -->
+          <div class="setpoint">
+            <div class="sp-lbl">Скорость</div>
+            <div class="sp-val ${isOn ? 'on' : ''}">${pct}<span class="sp-unit">%</span></div>
+            <div class="rpm-sub">${rpm !== '—' ? `${rpm} RPM` : ''}</div>
           </div>
+          ` : ''}
 
-          <!-- Sensors -->
-          <div class="section-label">Датчики</div>
-          <div class="sensor-grid">
-            <!-- Humidity -->
-            <div class="sensor-tile">
-              <div class="sensor-icon">💧</div>
-              <div class="sensor-name">Влажность</div>
-              <div class="sensor-value">${humidity}<span class="sensor-unit">%</span></div>
+          <!-- METRICS -->
+          <div class="metrics">
+            <div class="metric">
+              <div class="m-ico ${humidity !== '—' ? 'active' : ''}">${this._ico.humidity}</div>
+              <div class="m-txt"><div class="m-val">${humidity}${humidity !== '—' ? '%' : ''}</div><div class="m-lbl">Влажность</div></div>
             </div>
-
-            <!-- Mode -->
-            <div class="sensor-tile">
-              <div class="sensor-icon">⚙️</div>
-              <div class="sensor-name">Режим</div>
-              <div class="sensor-value">
-                <span class="mode-badge">${mode}</span>
+            <div class="metric">
+              <div class="m-ico">${this._ico.mode}</div>
+              <div class="m-txt"><div class="m-val">${mode}</div><div class="m-lbl">Режим</div></div>
+            </div>
+            <div class="metric">
+              <div class="m-ico ${isBoost ? 'active' : ''}">${this._ico.bolt}</div>
+              <div class="m-txt"><div class="m-val ${isBoost ? 'active' : ''}">${isBoost ? 'Вкл' : 'Выкл'}</div><div class="m-lbl">Буст</div></div>
+            </div>
+            <div class="metric ${isAlarm ? 'alarm-active' : ''}">
+              <div class="m-ico ${isAlarm ? 'danger' : 'ok'}">${isAlarm ? this._ico.alarm : this._ico.check}</div>
+              <div class="m-txt"><div class="m-val">${alarm}</div><div class="m-lbl">Тревога</div></div>
+            </div>
+            <div class="metric wide">
+              <div class="m-ico">${this._ico.filter}</div>
+              <div class="m-txt" style="flex:1">
+                <div class="m-val">${filterTimer}</div>
+                <div class="m-lbl">Фильтр</div>
+                <div class="dt-bar"><div class="dt-fill ${filterCls}" style="width:${filterPct}%"></div></div>
               </div>
             </div>
-
-            <!-- Boost -->
-            <div class="sensor-tile">
-              <div class="sensor-icon">⚡</div>
-              <div class="sensor-name">Буст</div>
-              <div class="sensor-value">
-                <span class="boost-indicator ${isBoostActive ? 'active' : 'inactive'}">
-                  ${isBoostActive ? '🔥 Вкл' : 'Выкл'}
-                </span>
-              </div>
-            </div>
-
-            <!-- Alarm -->
-            <div class="sensor-tile ${isAlarmActive ? 'alarm-active' : ''}">
-              <div class="sensor-icon">${isAlarmActive ? '🚨' : '✅'}</div>
-              <div class="sensor-name">Тревога</div>
-              <div class="sensor-value small">${alarm}</div>
-            </div>
-
-            <!-- Filter Timer -->
-            <div class="sensor-tile wide">
-              <div class="sensor-icon">🔄</div>
-              <div class="sensor-name">Фильтр (дней)</div>
-              <div class="sensor-value small">${filterTimer}</div>
-              <div class="filter-progress">
-                <div class="filter-progress-bar" style="width: ${this._getFilterProgress(filterTimer)}%"></div>
-              </div>
-            </div>
-
-            <!-- Timer -->
-            <div class="sensor-tile">
-              <div class="sensor-icon">⏱️</div>
-              <div class="sensor-name">Таймер</div>
-              <div class="sensor-value small">${timer}</div>
+            <div class="metric wide">
+              <div class="m-ico">${this._ico.timer}</div>
+              <div class="m-txt"><div class="m-val">${timer}</div><div class="m-lbl">Таймер</div></div>
             </div>
           </div>
 
-          <!-- Action Buttons -->
-          <div class="section-label">Управление</div>
+          <!-- ACTIONS -->
           <div class="actions">
-            <button class="action-btn" id="btn-party">
-              <span class="action-icon">🎉</span>
-              <span class="action-label">Вечеринка</span>
-            </button>
-            <button class="action-btn" id="btn-sleep">
-              <span class="action-icon">🌙</span>
-              <span class="action-label">Сон</span>
-            </button>
-            <button class="action-btn" id="btn-reset-filter">
-              <span class="action-icon">🔄</span>
-              <span class="action-label">Сброс фильтра</span>
-            </button>
+            <button class="abtn" id="btn-party">${this._ico.party}<span>Вечеринка</span></button>
+            <button class="abtn" id="btn-sleep">${this._ico.sleep}<span>Сон</span></button>
+            <button class="abtn" id="btn-reset">${this._ico.reset}<span>Сброс фильтра</span></button>
           </div>
 
-          <!-- Info Footer -->
-          <div class="info-footer">
-            <div class="info-item">
-              <span class="info-label">Прошивка</span>
-              <span class="info-value">${firmware}</span>
-            </div>
-            <div class="info-divider"></div>
-            <div class="info-item">
-              <span class="info-label">Версия</span>
-              <span class="info-value">${version}</span>
-            </div>
+          <!-- INFO -->
+          <div class="info">
+            <div class="info-item"><span class="info-lbl">Прошивка</span><span class="info-val">${firmware}</span></div>
+            <div class="info-sep"></div>
+            <div class="info-item"><span class="info-lbl">Версия</span><span class="info-val">${version}</span></div>
           </div>
+
         </div>
       </ha-card>
     `;
 
-    // ── Bind events ───────────────────────────────────────────────
-    this._root.getElementById('fan-toggle')?.addEventListener('click', () => this._toggleFan());
-    this._root.getElementById('speed-down')?.addEventListener('click', () => this._setSpeed(-1));
-    this._root.getElementById('speed-up')?.addEventListener('click', () => this._setSpeed(1));
-    this._root.getElementById('btn-party')?.addEventListener('click', () => this._pressButton('button_party'));
-    this._root.getElementById('btn-sleep')?.addEventListener('click', () => this._pressButton('button_sleep'));
-    this._root.getElementById('btn-reset-filter')?.addEventListener('click', () => this._pressButton('button_reset_filter'));
+    this._bindAll(d);
   }
 
-  /* ── Filter progress helper ────────────────────────────────────── */
-  private _getFilterProgress(value: string): number {
-    if (value === '—') return 100;
-    const days = parseInt(value, 10);
-    if (isNaN(days)) return 50;
-    // Common standard for Recuperator is ~365 days or 120 days.
-    // If user's integration reports "120" starting from a reset, we can assume typical scale.
-    // Blauberg often uses 90 days (2160h) or custom. Let's use 365 as scale start, or 120 if it clearly operates on a 120 scale.
-    const maxDays = days > 120 ? 365 : 120;
-    return Math.max(0, Math.min(100, (days / maxDays) * 100));
-  }
+  /* ══════════════════ Bindings ══════════════════ */
 
-  /* ── Card sizing ───────────────────────────────────────────────── */
-  getCardSize(): number {
-    return 8;
-  }
+  private _bindAll(d: DeviceConfig) {
+    const $ = (id: string) => this._root.getElementById(id);
 
-  /* ── Editor ────────────────────────────────────────────────────── */
-  static getConfigElement(): HTMLElement {
-    return document.createElement('blauberg-recuperator-card-editor');
-  }
+    // Tabs
+    this._root.querySelectorAll('.tab').forEach(el => {
+      el.addEventListener('click', () => {
+        this._activeTab = parseInt((el as HTMLElement).dataset.tab || '0', 10);
+        this._render();
+      });
+    });
 
-  static getStubConfig(): Record<string, string> {
-    return { ...DEFAULTS };
+    // Power
+    $('pwr')?.addEventListener('click', () => this._toggleFan(d));
+
+    // Fan circle toggle
+    $('fan-toggle')?.addEventListener('click', () => this._toggleFan(d));
+
+    // Speed
+    $('dn')?.addEventListener('click', () => this._setSpeed(d, -1));
+    $('up')?.addEventListener('click', () => this._setSpeed(d, 1));
+
+    // Actions
+    $('btn-party')?.addEventListener('click', () => this._press(d.button_party));
+    $('btn-sleep')?.addEventListener('click', () => this._press(d.button_sleep));
+    $('btn-reset')?.addEventListener('click', () => this._press(d.button_reset_filter));
   }
 }
 
-// ── Register ────────────────────────────────────────────────────────
+/* ═══════════════════ Register ═══════════════════ */
+
 customElements.define('blauberg-recuperator-card', BlaubergRecuperatorCard);
 
 (window as any).customCards = (window as any).customCards || [];
 (window as any).customCards.push({
   type: 'blauberg-recuperator-card',
   name: 'Blauberg Recuperator',
-  description: 'Neumorphic card for Blauberg wall-mounted recuperators',
+  description: 'Neumorphic multi-device card for Blauberg wall-mounted recuperators',
   preview: true,
 });
+
+console.info(
+  '%c BLAUBERG-RECUPERATOR-CARD %c v1.0.0 ',
+  'color: white; background: #3b82f6; font-weight: bold; border-radius: 4px 0 0 4px; padding: 2px 8px;',
+  'color: #3b82f6; background: #e3e6ec; font-weight: bold; border-radius: 0 4px 4px 0; padding: 2px 8px;'
+);
