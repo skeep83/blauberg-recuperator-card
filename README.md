@@ -148,6 +148,48 @@ devices:
 | `text_color` | string | — | Custom text color (CSS) |
 | `animation_color` | string | — | Custom accent color (CSS) |
 
+## 🧠 Smart Automation Package
+
+Turn your recuperators into an intelligent climate system. The included `packages/smart_recuperator.yaml` coordinates your recuperators with heating, humidity sensors, weather data, and more.
+
+### Installation
+
+1. Copy `packages/smart_recuperator.yaml` to your HA `config/packages/` directory
+2. Add to your `configuration.yaml`:
+   ```yaml
+   homeassistant:
+     packages:
+       smart_recuperator: !include packages/smart_recuperator.yaml
+   ```
+3. Restart Home Assistant
+4. Enable desired modules via **Settings → Devices → Helpers** (toggle switches)
+
+### Automation Modules
+
+| Module | Toggle | Description |
+|--------|--------|-------------|
+| 💧 **Humidity Control** | `smart_recup_humidity_control` | Auto-boost when room humidity > 65%, restore at < 55% |
+| 🔥 **Heating Sync** | `smart_recup_heating_sync` | Reduce speed when boiler is running + outdoor T° < 5°C |
+| 🌡️ **Dew Point Protection** | `smart_recup_dewpoint_protect` | Increase ventilation when approaching condensation point |
+| 🌙 **Night Mode** | `smart_recup_night_mode` | Quiet 25% speed from 22:00 to 07:00 |
+| 🔄 **Filter Alerts** | `smart_recup_filter_alert` | Notification when filter life < 14 days |
+| 🌤️ **Weather Adaptation** | `smart_recup_weather_adapt` | Minimize intake during rain/storm/extreme heat |
+
+### Template Sensors Created
+
+- `sensor.smart_recup_outdoor_temp` / `sensor.smart_recup_outdoor_humidity`
+- `sensor.smart_recup_dewpoint_*` — Dew point per room (Magnus formula)
+- `sensor.smart_recup_filter_*` — Filter life in days
+- `sensor.smart_recup_status_*` — Smart status per recuperator (Норма/Осушение/Ночной/Эконом)
+
+### Configurable Thresholds
+
+All thresholds are `input_number` helpers — adjustable via UI without editing YAML:
+
+- Humidity boost/stop levels, Night mode speed, Heating min speed
+- Cold/hot outdoor temperature limits, Filter warning days
+- Night mode start/end times
+
 ## 🛠️ Build from Source
 
 ```bash
